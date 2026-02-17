@@ -316,11 +316,17 @@
 
   </div>
 
-  <!-- Scripts -->
-  <script type="module" src="js/ui.js"></script>
+  <!-- Load all JavaScript files in order -->
+  <script src="js/calculator.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
   <script>
-    // Initialize Feather icons
-    feather.replace();
+    // Initialize Feather icons after all scripts load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.feather) {
+        feather.replace();
+      }
+    });
   </script>
 
 </body>

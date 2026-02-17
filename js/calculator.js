@@ -5,13 +5,16 @@
  * All functions are pure and testable.
  */
 
+// Create global AIRudder namespace
+window.AIRudder = window.AIRudder || {};
+
 /**
  * Calculate retained agents after deflection
  * @param {number} totalAgents - Total current agents
  * @param {number} deflectionRate - Deflection rate (0-1)
  * @returns {number} - Retained agents (rounded up conservatively)
  */
-export function calculateRetainedAgents(totalAgents, deflectionRate) {
+AIRudder.calculateRetainedAgents = function(totalAgents, deflectionRate) {
   const total = totalAgents || 0;
   const rate = deflectionRate || 0;
   const retained = total * (1 - rate);
@@ -24,7 +27,7 @@ export function calculateRetainedAgents(totalAgents, deflectionRate) {
  * @param {number} hourlyRate - Hourly rate for admin time
  * @returns {number} - Monthly value of admin hours saved
  */
-export function calculateAdminValue(hoursPerMonth, hourlyRate) {
+AIRudder.calculateAdminValue = function(hoursPerMonth, hourlyRate) {
   const hours = hoursPerMonth || 0;
   const rate = hourlyRate || 0;
   return hours * rate;
@@ -36,7 +39,7 @@ export function calculateAdminValue(hoursPerMonth, hourlyRate) {
  * @param {Object} globalParams - {volume, humanTime, aiTime, totalAgents, deflectionRate}
  * @returns {Object} - {capex: number, monthlyOpex: number}
  */
-export function calculateLedgerTotals(items, globalParams = {}) {
+AIRudder.calculateLedgerTotals = function(items, globalParams = {}) {
   if (!items || items.length === 0) {
     return { capex: 0, monthlyOpex: 0 };
   }
@@ -49,7 +52,7 @@ export function calculateLedgerTotals(items, globalParams = {}) {
     deflectionRate = 0
   } = globalParams;
 
-  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
+  const retainedAgents = AIRudder.calculateRetainedAgents(totalAgents, deflectionRate);
 
   let capex = 0;
   let monthlyOpex = 0;
@@ -102,7 +105,7 @@ export function calculateLedgerTotals(items, globalParams = {}) {
  * @param {Object} globalParams - Global parameters
  * @returns {Object} - {clientMonthly, aiMonthly, clientCapex, aiCapex, agentsReplaced, retainedAgents, adminValue}
  */
-export function calculateMonthlyCosts(clientItems, aiItems, globalParams) {
+AIRudder.calculateMonthlyCosts = function(clientItems, aiItems, globalParams) {
   const params = globalParams || {};
 
   // Mark items with their side for per-minute calculations
@@ -116,17 +119,17 @@ export function calculateMonthlyCosts(clientItems, aiItems, globalParams) {
     isAISide: true
   }));
 
-  const clientTotals = calculateLedgerTotals(clientItemsWithSide, params);
-  const aiTotals = calculateLedgerTotals(aiItemsWithSide, params);
+  const clientTotals = AIRudder.calculateLedgerTotals(clientItemsWithSide, params);
+  const aiTotals = AIRudder.calculateLedgerTotals(aiItemsWithSide, params);
 
   const totalAgents = params.totalAgents || 0;
   const deflectionRate = params.deflectionRate || 0;
-  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
+  const retainedAgents = AIRudder.calculateRetainedAgents(totalAgents, deflectionRate);
   const agentsReplaced = totalAgents - retainedAgents;
 
   const adminHours = params.adminHours || 0;
   const hourlyRate = params.hourlyRate || 0;
-  const adminValue = calculateAdminValue(adminHours, hourlyRate);
+  const adminValue = AIRudder.calculateAdminValue(adminHours, hourlyRate);
 
   return {
     clientMonthly: clientTotals.monthlyOpex,
@@ -146,7 +149,7 @@ export function calculateMonthlyCosts(clientItems, aiItems, globalParams) {
  * @param {number} legacyLicenseCost - Monthly license cost per agent (optional)
  * @returns {number} - Monthly payroll saved
  */
-export function calculatePayrollSaved(agentsReplaced, monthlySalary, legacyLicenseCost = 0) {
+AIRudder.calculatePayrollSaved = function(agentsReplaced, monthlySalary, legacyLicenseCost = 0) {
   const agents = agentsReplaced || 0;
   const salary = monthlySalary || 0;
   const license = legacyLicenseCost || 0;
@@ -162,7 +165,7 @@ export function calculatePayrollSaved(agentsReplaced, monthlySalary, legacyLicen
  * @param {number} adminValue - Monthly admin hours value (benefit offset)
  * @returns {Object} - {labels, clientData, aiData, breakEvenMonth}
  */
-export function generateROITimeline(clientMonthly, aiMonthly, clientCapex, aiCapex, adminValue = 0) {
+AIRudder.generateROITimeline = function(clientMonthly, aiMonthly, clientCapex, aiCapex, adminValue = 0) {
   const labels = [];
   const clientData = [];
   const aiData = [];
@@ -204,7 +207,7 @@ export function generateROITimeline(clientMonthly, aiMonthly, clientCapex, aiCap
  * @param {number} payrollSaved - Monthly payroll saved from deflection
  * @returns {Object} - {initialInvestment, monthlySavings, payrollSaved, year1NetSavings, breakEvenMonth}
  */
-export function calculateDashboardMetrics(
+AIRudder.calculateDashboardMetrics = function(
   clientMonthly,
   aiMonthly,
   clientCapex,
@@ -246,7 +249,7 @@ export function calculateDashboardMetrics(
  * @param {number} value - Numeric value
  * @returns {string} - Formatted currency string
  */
-export function formatCurrency(value) {
+AIRudder.formatCurrency = function(value) {
   return new Intl.NumberFormat('th-TH', {
     style: 'currency',
     currency: 'THB',
@@ -260,7 +263,7 @@ export function formatCurrency(value) {
  * @param {number} value - Numeric value
  * @returns {string} - Formatted number string
  */
-export function formatNumber(value) {
+AIRudder.formatNumber = function(value) {
   return new Intl.NumberFormat('th-TH', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0

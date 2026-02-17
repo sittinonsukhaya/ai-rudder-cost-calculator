@@ -1,3 +1,6 @@
+// Create global AIRudderStorage namespace
+window.AIRudderStorage = window.AIRudderStorage || {};
+
 /**
  * AI Rudder Cost Calculator - Storage Module
  *
@@ -13,7 +16,7 @@ const SCENARIOS_LIST_KEY = 'airudder_scenarios_list';
  * @param {Object} data - Scenario data (globalParams, clientItems, aiItems)
  * @returns {boolean} - Success status
  */
-export function saveScenario(name, data) {
+AIRudderStorage.saveScenario = function(name, data) {
   if (!name || !name.trim()) {
     console.error('Scenario name is required');
     return false;
@@ -33,7 +36,7 @@ export function saveScenario(name, data) {
     );
 
     // Update scenarios list
-    const scenarios = listScenarios();
+    const scenarios = AIRudderStorage.listScenarios();
     const existingIndex = scenarios.findIndex(s => s.name === name.trim());
 
     if (existingIndex === -1) {
@@ -56,7 +59,7 @@ export function saveScenario(name, data) {
  * @param {string} name - Scenario name
  * @returns {Object|null} - Scenario data or null if not found
  */
-export function loadScenario(name) {
+AIRudderStorage.loadScenario = function(name) {
   if (!name || !name.trim()) {
     return null;
   }
@@ -74,7 +77,7 @@ export function loadScenario(name) {
  * List all saved scenarios
  * @returns {Array} - Array of {name, timestamp} objects
  */
-export function listScenarios() {
+AIRudderStorage.listScenarios = function() {
   try {
     const data = localStorage.getItem(SCENARIOS_LIST_KEY);
     return data ? JSON.parse(data) : [];
@@ -89,7 +92,7 @@ export function listScenarios() {
  * @param {string} name - Scenario name
  * @returns {boolean} - Success status
  */
-export function deleteScenario(name) {
+AIRudderStorage.deleteScenario = function(name) {
   if (!name || !name.trim()) {
     return false;
   }
@@ -99,7 +102,7 @@ export function deleteScenario(name) {
     localStorage.removeItem(STORAGE_KEY_PREFIX + name.trim());
 
     // Update scenarios list
-    const scenarios = listScenarios();
+    const scenarios = AIRudderStorage.listScenarios();
     const filtered = scenarios.filter(s => s.name !== name.trim());
     localStorage.setItem(SCENARIOS_LIST_KEY, JSON.stringify(filtered));
 
@@ -115,8 +118,8 @@ export function deleteScenario(name) {
  * @param {string} name - Scenario name
  * @returns {string|null} - JSON string or null
  */
-export function exportToJSON(name) {
-  const scenario = loadScenario(name);
+AIRudderStorage.exportToJSON = function(name) {
+  const scenario = AIRudderStorage.loadScenario(name);
   return scenario ? JSON.stringify(scenario, null, 2) : null;
 }
 
@@ -124,9 +127,9 @@ export function exportToJSON(name) {
  * Clear all scenarios (use with caution)
  * @returns {boolean} - Success status
  */
-export function clearAllScenarios() {
+AIRudderStorage.clearAllScenarios = function() {
   try {
-    const scenarios = listScenarios();
+    const scenarios = AIRudderStorage.listScenarios();
     scenarios.forEach(scenario => {
       localStorage.removeItem(STORAGE_KEY_PREFIX + scenario.name);
     });
