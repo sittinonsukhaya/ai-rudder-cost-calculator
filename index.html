@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Rudder Cost Calculator - ROI Assessment Tool</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Feather Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <style>
+    /* Inline critical styles for AI Rudder brand */
+    :root {
+      --brand-blue: #2563eb;
+      --teal-accent: #44C9C1;
+      --dark-navy: #024F94;
+      --client-legacy: #ef4444;
+      --savings-green: #22c55e;
+    }
+
+    body {
+      background-color: #f7fbff;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px -10px rgba(2, 8, 23, 0.10);
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-primary {
+      background-color: var(--brand-blue);
+      color: white;
+      border-radius: 9999px;
+      padding: 12px 24px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background-color: #f1f5f9;
+      color: #334155;
+      border-radius: 9999px;
+      padding: 10px 20px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+    }
+
+    .btn-danger {
+      background-color: var(--client-legacy);
+      color: white;
+      border-radius: 9999px;
+      padding: 10px 20px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .btn-danger:hover {
+      opacity: 0.9;
+    }
+
+    input, select {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px 14px;
+      width: 100%;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+      border-color: var(--brand-blue);
+    }
+
+    .metric-card {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111827;
+      margin: 8px 0;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cost-item {
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .cost-item:hover {
+      background: #f1f5f9;
+    }
+
+    .slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 5px;
+      background: #e5e7eb;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--brand-blue);
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--brand-blue);
+      cursor: pointer;
+      border: none;
+    }
+  </style>
+</head>
+<body class="p-6">
+
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="card p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-semibold text-slate-900">AI Rudder Cost Calculator</h1>
+          <p class="text-slate-600 mt-1">Interactive ROI Analysis Tool for Collaborative Sales Sessions</p>
+        </div>
+        <div class="flex gap-3">
+          <select id="scenarioDropdown" class="w-64">
+            <option value="">Select a scenario...</option>
+          </select>
+          <button id="saveScenarioBtn" class="btn-secondary">
+            <i data-feather="save" class="w-4 h-4 inline"></i> Save
+          </button>
+          <button id="loadScenarioBtn" class="btn-secondary">
+            <i data-feather="folder-open" class="w-4 h-4 inline"></i> Load
+          </button>
+          <button id="deleteScenarioBtn" class="btn-danger">
+            <i data-feather="trash-2" class="w-4 h-4 inline"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Metrics -->
+    <div class="grid grid-cols-5 gap-4 mb-6">
+      <div class="card metric-card">
+        <div class="metric-label">Initial Investment</div>
+        <div id="metricInitialInvestment" class="metric-value">฿0</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-label">Monthly Savings</div>
+        <div id="metricMonthlySavings" class="metric-value">฿0</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-label">Payroll Saved</div>
+        <div id="metricPayrollSaved" class="metric-value">฿0</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-label">Year 1 Net Savings</div>
+        <div id="metricYear1Savings" class="metric-value">฿0</div>
+      </div>
+      <div class="card metric-card">
+        <div class="metric-label">Break-Even Month</div>
+        <div id="metricBreakEven" class="metric-value">-</div>
+      </div>
+    </div>
+
+    <!-- Global Parameters -->
+    <div class="card p-6 mb-6">
+      <h2 class="text-xl font-semibold text-slate-900 mb-4">Global Parameters</h2>
+      <div class="grid grid-cols-5 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Total Monthly Volume</label>
+          <input type="number" id="totalVolume" placeholder="10000" min="0" step="100">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Avg Human Handle Time (Minutes)</label>
+          <input type="number" id="humanTime" placeholder="6" min="0" step="0.1">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Avg AI Handle Time (Minutes)</label>
+          <input type="number" id="aiTime" placeholder="3.5" min="0" step="0.1">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Total Current Agents</label>
+          <input type="number" id="totalAgents" placeholder="100" min="0" step="1">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Avg Monthly Salary per Agent</label>
+          <input type="number" id="monthlySalary" placeholder="25000" min="0" step="1000">
+        </div>
+      </div>
+    </div>
+
+    <!-- Operation Efficiency Offset -->
+    <div class="card p-6 mb-6">
+      <h2 class="text-xl font-semibold text-slate-900 mb-4">Operation Efficiency Offset</h2>
+
+      <!-- Deflection Rate -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <label class="text-sm font-medium text-slate-700">AI Deflection Rate</label>
+          <span id="deflectionValue" class="text-2xl font-bold text-blue-600">20%</span>
+        </div>
+        <input type="range" id="deflectionRate" class="slider" min="0" max="80" value="20" step="1">
+        <div class="grid grid-cols-3 gap-4 mt-4">
+          <div class="text-center p-3 bg-slate-50 rounded-lg">
+            <div class="text-xs text-slate-600 mb-1">Agents Replaced</div>
+            <div id="agentsReplaced" class="text-lg font-semibold text-slate-900">0 of 0</div>
+          </div>
+          <div class="text-center p-3 bg-slate-50 rounded-lg">
+            <div class="text-xs text-slate-600 mb-1">Traffic Routed to AI</div>
+            <div id="trafficToAI" class="text-lg font-semibold text-slate-900">0%</div>
+          </div>
+          <div class="text-center p-3 bg-slate-50 rounded-lg">
+            <div class="text-xs text-slate-600 mb-1">Payroll Saved</div>
+            <div id="payrollDisplay" class="text-lg font-semibold text-green-600">฿0/mo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Hours Saved -->
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Admin Hours Saved/Month</label>
+          <input type="number" id="adminHours" placeholder="160" min="0" step="10">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Hourly Rate</label>
+          <input type="number" id="hourlyRate" placeholder="150" min="0" step="10">
+        </div>
+        <div class="flex items-end">
+          <div class="text-center p-3 bg-teal-50 rounded-lg w-full">
+            <div class="text-xs text-teal-700 mb-1">Admin Value Reclaimed</div>
+            <div id="adminValueDisplay" class="text-lg font-semibold text-teal-600">฿0/mo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-Column Cost Comparison -->
+    <div class="grid grid-cols-2 gap-6 mb-6">
+
+      <!-- Client Current State -->
+      <div class="card p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-slate-900">Client Current State</h2>
+          <button id="addClientItem" class="btn-primary text-sm py-2 px-4">
+            <i data-feather="plus" class="w-4 h-4 inline"></i> Add Cost Item
+          </button>
+        </div>
+        <div id="clientItems" class="space-y-3">
+          <!-- Dynamic items will be added here -->
+        </div>
+      </div>
+
+      <!-- AI Rudder Solution -->
+      <div class="card p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-slate-900">AI Rudder Solution</h2>
+          <button id="addAIItem" class="btn-primary text-sm py-2 px-4">
+            <i data-feather="plus" class="w-4 h-4 inline"></i> Add Cost Item
+          </button>
+        </div>
+        <div id="aiItems" class="space-y-3">
+          <!-- Dynamic items will be added here -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROI Chart -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold text-slate-900 mb-4">24-Month ROI Timeline</h2>
+      <canvas id="roiChart" style="max-height: 400px;"></canvas>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/ui.js"></script>
+  <script>
+    // Initialize Feather icons
+    feather.replace();
+  </script>
+
+</body>
+</html>

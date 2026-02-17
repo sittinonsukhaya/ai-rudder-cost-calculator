@@ -1,0 +1,24 @@
+{
+  "name": "ai-rudder-cost-calculator",
+  "version": "1.0.0",
+  "description": "Interactive ROI calculator for collaborative sales sessions comparing call center costs vs AI Rudder's conversational AI solution",
+  "main": "index.html",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "calculator",
+    "roi",
+    "ai",
+    "call-center",
+    "cost-comparison"
+  ],
+  "author": "AI Rudder",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}
