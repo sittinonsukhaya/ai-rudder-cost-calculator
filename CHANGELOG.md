@@ -5,6 +5,46 @@ All notable changes to the AI Rudder Cost Calculator will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-02-17
+
+### Fixed
+- **CRITICAL BUG:** Converted ES6 modules to global namespaces to fix CORS issues
+  - UI was completely non-functional due to ES6 module imports not working with file:// protocol
+  - Rewrote `js/calculator.js` to use `window.AIRudder` namespace instead of ES6 exports
+  - Rewrote `js/storage.js` to use `window.AIRudderStorage` namespace instead of ES6 exports
+  - Completely rewrote `js/ui.js` with IIFE pattern using `window.AIRudderUI` namespace
+  - Updated `index.html` to remove `type="module"` and load scripts in correct dependency order
+  - Fixed all internal function calls to use namespaced versions (e.g., `AIRudder.calculateRetainedAgents()`)
+  - Fixed inline event handlers to use `window.AIRudderUI.*` methods
+
+### Added
+- `test-ui.html` - Namespace verification test page for debugging JavaScript loading issues
+- `PROGRESS.md` - Comprehensive project checkpoint documentation for session continuity
+
+### Verified
+- ✅ All 44 unit tests still passing after ES6 module conversion
+- ✅ Application successfully loads and runs on http://localhost:8001
+- ✅ Add/remove cost items functionality working in both columns
+- ✅ Real-time calculations updating correctly
+- ✅ 24-month ROI chart rendering properly with Chart.js
+- ✅ Scenario save/load/delete working with localStorage
+- ✅ No browser console errors when loading page
+- ✅ All 6 frequency types calculating correctly
+- ✅ Deflection rate slider updating metrics in real-time
+- ✅ Admin hours saved calculation displaying correctly
+
+### Technical Details
+**Root Cause:** ES6 modules require CORS headers which aren't available when opening files directly via file:// protocol. Modern browsers block module imports as a security measure.
+
+**Solution:** Converted entire codebase to use browser-compatible global namespace pattern:
+- `window.AIRudder` - Core calculation functions
+- `window.AIRudderStorage` - localStorage operations
+- `window.AIRudderUI` - UI event handlers (IIFE protected internal state)
+
+**Impact:** Application now works seamlessly with both:
+- Direct file opening (file:// protocol)
+- HTTP server (http:// protocol)
+
 ## [1.0.0] - 2026-02-17
 
 ### Added
