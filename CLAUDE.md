@@ -26,7 +26,8 @@ This document locks down terminology, code standards, and design patterns to pre
 
 **Rates Comparison:**
 - **"Client Rate"** / **"AI Rudder's Bot Call Rates (AICalling)"** / **"AI Rudder Call Rates (AICC)"** — column headers
-- **"AI Handle Time (Minutes)"** — *Average duration when AI handles a voice/chat interaction*
+- **"Voice AI Handle Time (Min)"** — *Average duration when AI handles a voice call* (used in cost calculation)
+- **"Chat AI Handle Time (Min)"** — *Average duration when AI handles a chat session* (informational only; chat is per-session billing)
 
 **Additional Costs:**
 - **"Cost Name"** (not "Description" or "Item")
@@ -68,7 +69,7 @@ This document locks down terminology, code standards, and design patterns to pre
 - **"ROI"** — return on initial investment in Year 1
 
 **Efficiency Gains:**
-- **"AI Capacity"** — `X / Y` agents (not "Agents Replaced")
+- **"Agents Freed Up"** — `X agents` available for higher-value tasks (not "AI Capacity" or "Agents Replaced")
 - **"Hours Reclaimed"** — hours/month freed by automation
 - **"Extra Serving Capacity"** — additional customers/month from reclaimed time
 - **"Capacity Increase"** — team throughput gained

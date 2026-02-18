@@ -296,6 +296,7 @@ input:focus, select:focus {
 /* ===== Field Labels ===== */
 .field-label {
   display: block;
+  flex: 1;
   font-size: 14px;
   font-weight: 500;
   color: var(--slate-900);

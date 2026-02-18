@@ -37,6 +37,10 @@ const translations = {
     'field.handleTimeDesc': 'Duration per human-handled call',
     'field.aiHandleTime': 'AI Handle Time (Minutes)',
     'field.aiHandleTimeDesc': 'Average duration when AI handles a voice/chat interaction',
+    'field.voiceAiHandleTime': 'Voice AI Handle Time (Min)',
+    'field.voiceAiHandleTimeDesc': 'Average duration when AI handles a voice call',
+    'field.chatAiHandleTime': 'Chat AI Handle Time (Min)',
+    'field.chatAiHandleTimeDesc': 'Average duration when AI handles a chat session',
     'field.deflectionRate': 'AI Deflection Rate',
     'field.deflectionRateDesc': 'Percentage of interactions fully handled by AI without human intervention',
     'field.adminHours': 'Hours Saved by Automation',
@@ -99,8 +103,8 @@ const translations = {
 
     // Efficiency Gains
     'efficiency.title': 'Efficiency Gains',
-    'efficiency.aiCapacity': 'AI Capacity',
-    'efficiency.aiCapacityHint': '{n} agents equivalent ({pct}% automated)',
+    'efficiency.agentsFreed': 'Agents Freed Up',
+    'efficiency.agentsFreedHint': 'Available for higher-value tasks ({pct}% automated)',
     'efficiency.hoursReclaimed': 'Hours Reclaimed',
     'efficiency.hoursReclaimedHint': '{n} hrs/mo (~{eq} agents equivalent)',
     'efficiency.extraCapacity': 'Extra Serving Capacity',
@@ -179,6 +183,10 @@ const translations = {
     'field.handleTimeDesc': 'ระยะเวลาต่อสายที่เจ้าหน้าที่รับ',
     'field.aiHandleTime': 'เวลาจัดการ AI (นาที)',
     'field.aiHandleTimeDesc': 'ระยะเวลาเฉลี่ยเมื่อ AI จัดการการโต้ตอบเสียง/แชท',
+    'field.voiceAiHandleTime': 'เวลาจัดการ AI เสียง (นาที)',
+    'field.voiceAiHandleTimeDesc': 'ระยะเวลาเฉลี่ยเมื่อ AI จัดการสายเสียง',
+    'field.chatAiHandleTime': 'เวลาจัดการ AI แชท (นาที)',
+    'field.chatAiHandleTimeDesc': 'ระยะเวลาเฉลี่ยเมื่อ AI จัดการเซสชันแชท',
     'field.deflectionRate': 'อัตรา AI Deflection',
     'field.deflectionRateDesc': 'เปอร์เซ็นต์ของการโต้ตอบที่ AI จัดการได้ทั้งหมดโดยไม่ต้องมีเจ้าหน้าที่',
     'field.adminHours': 'ชั่วโมงที่ประหยัดจากระบบอัตโนมัติ',
@@ -241,8 +249,8 @@ const translations = {
 
     // Efficiency Gains
     'efficiency.title': 'ประสิทธิภาพที่เพิ่มขึ้น',
-    'efficiency.aiCapacity': 'ศักยภาพ AI',
-    'efficiency.aiCapacityHint': 'เทียบเท่า {n} เจ้าหน้าที่ ({pct}% อัตโนมัติ)',
+    'efficiency.agentsFreed': 'เจ้าหน้าที่ที่ว่าง',
+    'efficiency.agentsFreedHint': 'พร้อมสำหรับงานที่มีมูลค่าสูงขึ้น ({pct}% อัตโนมัติ)',
     'efficiency.hoursReclaimed': 'ชั่วโมงที่ได้คืน',
     'efficiency.hoursReclaimedHint': '{n} ชม./เดือน (~{eq} เจ้าหน้าที่เทียบเท่า)',
     'efficiency.extraCapacity': 'ศักยภาพการให้บริการเพิ่มเติม',

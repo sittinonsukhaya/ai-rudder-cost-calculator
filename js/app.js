@@ -102,7 +102,7 @@ function recalculate() {
 function renderStructure() {
   const state = getState();
   renderChannels(channelsContainer, state.channels);
-  renderRates(ratesContainer, state.channels, state.rates, state.aiHandleTime);
+  renderRates(ratesContainer, state.channels, state.rates, state.aiHandleTime, state.chatAiHandleTime);
   renderCostItems(clientItemsContainer, state.clientItems, 'client');
   renderCostItems(aiItemsContainer, state.aiItems, 'ai');
 }
@@ -114,7 +114,7 @@ function renderStructure() {
 function renderChannelsAndRates() {
   const state = getState();
   renderChannels(channelsContainer, state.channels);
-  renderRates(ratesContainer, state.channels, state.rates, state.aiHandleTime);
+  renderRates(ratesContainer, state.channels, state.rates, state.aiHandleTime, state.chatAiHandleTime);
 }
 
 // ===== Language Switch =====
@@ -183,7 +183,7 @@ channelsContainer.addEventListener('input', (e) => {
   // Re-render rates table when name changes (safe: user is typing in channels, not rates)
   if (field === 'name') {
     const updated = getState();
-    renderRates(ratesContainer, updated.channels, updated.rates, updated.aiHandleTime);
+    renderRates(ratesContainer, updated.channels, updated.rates, updated.aiHandleTime, updated.chatAiHandleTime);
   }
 });
 
@@ -253,9 +253,13 @@ document.getElementById('addChannelBtn').addEventListener('click', () => {
 ratesContainer.addEventListener('input', (e) => {
   const el = e.target;
 
-  // AI Handle Time field
+  // AI Handle Time fields
   if (el.id === 'aiHandleTime') {
     setState({ aiHandleTime: parseFloat(el.value) || 0 });
+    return;
+  }
+  if (el.id === 'chatAiHandleTime') {
+    setState({ chatAiHandleTime: parseFloat(el.value) || 0 });
     return;
   }
 
@@ -421,6 +425,7 @@ document.getElementById('loadScenarioBtn').addEventListener('click', () => {
         channels: scenario.channels || [{ id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 }],
         rates: migratedRates,
         aiHandleTime: scenario.aiHandleTime || 3.5,
+        chatAiHandleTime: scenario.chatAiHandleTime || 2,
         clientItems: (scenario.clientItems || []).map(item => ({
           ...item,
           id: item.id || Date.now() + Math.random()

@@ -110,11 +110,12 @@ export function renderChannels(container, channels) {
  * Render rates comparison table in Section 2
  * Adds numbered labels when multiple channels of the same type exist
  */
-export function renderRates(container, channels, rates, aiHandleTime) {
+export function renderRates(container, channels, rates, aiHandleTime, chatAiHandleTime) {
   if (!container) return;
 
   const channelTypes = getChannelTypes();
-  const hasVoiceOrChat = channels.some(c => c.type === 'voice' || c.type === 'chat');
+  const hasVoice = channels.some(c => c.type === 'voice');
+  const hasChat = channels.some(c => c.type === 'chat');
 
   if (channels.length === 0) {
     container.innerHTML = `<p style="color: var(--muted-text); font-size: 14px;">${t('misc.noChannels')}</p>`;
@@ -177,16 +178,31 @@ export function renderRates(container, channels, rates, aiHandleTime) {
 
   html += '</tbody></table>';
 
-  if (hasVoiceOrChat) {
-    html += `
-      <div class="field-group" style="margin-top: 16px; max-width: 250px;">
-        <label class="field-label">
-          ${t('field.aiHandleTime')}
-          <span class="field-description">${t('field.aiHandleTimeDesc')}</span>
-        </label>
-        <input type="number" id="aiHandleTime" value="${aiHandleTime}" min="0" step="0.1">
-      </div>
-    `;
+  if (hasVoice || hasChat) {
+    html += '<div class="grid-2" style="margin-top: 16px;">';
+    if (hasVoice) {
+      html += `
+        <div class="field-group">
+          <label class="field-label">
+            ${t('field.voiceAiHandleTime')}
+            <span class="field-description">${t('field.voiceAiHandleTimeDesc')}</span>
+          </label>
+          <input type="number" id="aiHandleTime" value="${aiHandleTime}" min="0" step="0.1">
+        </div>
+      `;
+    }
+    if (hasChat) {
+      html += `
+        <div class="field-group">
+          <label class="field-label">
+            ${t('field.chatAiHandleTime')}
+            <span class="field-description">${t('field.chatAiHandleTimeDesc')}</span>
+          </label>
+          <input type="number" id="chatAiHandleTime" value="${chatAiHandleTime}" min="0" step="0.1">
+        </div>
+      `;
+    }
+    html += '</div>';
   }
 
   container.innerHTML = html;
@@ -278,11 +294,10 @@ export function renderEfficiencyGains(data) {
     if (node) node.textContent = value;
   };
 
-  // AI Capacity
-  setIfExists('metricAICapacity', `${formatNumber(data.aiCapacity)} / ${formatNumber(data.totalAgents)}`);
-  setIfExists('metricAICapacityHint',
-    t('efficiency.aiCapacityHint')
-      .replace('{n}', formatNumber(data.aiCapacity))
+  // Agents Freed Up
+  setIfExists('metricAgentsFreed', `${formatNumber(data.aiCapacity)} agents`);
+  setIfExists('metricAgentsFreedHint',
+    t('efficiency.agentsFreedHint')
       .replace('{pct}', formatNumber(data.automatedPct))
   );
 

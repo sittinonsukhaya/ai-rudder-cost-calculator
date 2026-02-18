@@ -23,6 +23,7 @@ const defaultState = {
     1: { client: 2, aiBot: 2, aiAgent: 4 }
   },
   aiHandleTime: 3.5,
+  chatAiHandleTime: 2,
 
   // Section 3: Additional Costs
   clientItems: [],
