@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import {
   calculateRetainedAgents,
   calculateAdminValue,
+  calculateChannelCosts,
   calculateLedgerTotals,
   calculateMonthlyCosts,
   calculatePayrollSaved,
@@ -19,9 +20,9 @@ describe('calculateRetainedAgents', () => {
   });
 
   test('rounds up conservatively', () => {
-    expect(calculateRetainedAgents(100, 0.25)).toBe(75); // 75 (exact)
-    expect(calculateRetainedAgents(99, 0.2)).toBe(80); // 79.2 rounded up
-    expect(calculateRetainedAgents(95, 0.3)).toBe(67); // 66.5 rounded up
+    expect(calculateRetainedAgents(100, 0.25)).toBe(75);
+    expect(calculateRetainedAgents(99, 0.2)).toBe(80);
+    expect(calculateRetainedAgents(95, 0.3)).toBe(67);
   });
 
   test('handles zero and null values', () => {
@@ -45,6 +46,134 @@ describe('calculateAdminValue', () => {
   test('handles null values', () => {
     expect(calculateAdminValue(null, 150)).toBe(0);
     expect(calculateAdminValue(160, null)).toBe(0);
+  });
+});
+
+describe('calculateChannelCosts', () => {
+  test('voice with zero deflection routes all through agent rate', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 }
+    ];
+    const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0);
+
+    // Client: 2 * 10000 * 6 = 120,000
+    expect(result.clientTotal).toBe(120000);
+    // AI: all agent = 5 * 10000 * 6 = 300,000
+    expect(result.aiTotal).toBe(300000);
+  });
+
+  test('voice splits AI cost between bot and agent using deflection rate', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 }
+    ];
+    const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+
+    // Client: 2 * 10000 * 6 = 120,000
+    expect(result.clientTotal).toBe(120000);
+    // AI bot: 1 * 2000 * 3.5 = 7,000
+    // AI agent: 5 * 8000 * 6 = 240,000
+    // AI total: 247,000
+    expect(result.aiTotal).toBe(247000);
+  });
+
+  test('bot uses aiHandleTime, agent uses humanHandleTime for voice', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 1000, humanHandleTime: 10 }
+    ];
+    const rates = { 1: { client: 1, aiBot: 1, aiAgent: 1 } };
+    // Same rate for both, so difference is purely handle time
+    const result = calculateChannelCosts(channels, rates, 2, 0.5);
+
+    // Bot: 1 * 500 * 2 = 1,000
+    // Agent: 1 * 500 * 10 = 5,000
+    expect(result.aiTotal).toBe(6000);
+  });
+
+  test('SMS splits by deflection without handle time', () => {
+    const channels = [
+      { id: 1, type: 'sms', volume: 50000 }
+    ];
+    const rates = { 1: { client: 0.5, aiBot: 0.2, aiAgent: 0.4 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+
+    // Client: 0.5 * 50000 = 25,000
+    expect(result.clientTotal).toBe(25000);
+    // AI bot: 0.2 * 10000 = 2,000
+    // AI agent: 0.4 * 40000 = 16,000
+    expect(result.aiTotal).toBe(18000);
+  });
+
+  test('chat splits by deflection without handle time', () => {
+    const channels = [
+      { id: 1, type: 'chat', volume: 2000 }
+    ];
+    const rates = { 1: { client: 50, aiBot: 15, aiAgent: 30 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.3);
+
+    // Client: 50 * 2000 = 100,000
+    expect(result.clientTotal).toBe(100000);
+    // AI bot: 15 * 600 = 9,000
+    // AI agent: 30 * 1400 = 42,000
+    expect(result.aiTotal).toBe(51000);
+  });
+
+  test('handles multiple channels with deflection', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
+      { id: 2, type: 'sms', volume: 20000 },
+      { id: 3, type: 'chat', volume: 3000 }
+    ];
+    const rates = {
+      1: { client: 2, aiBot: 1, aiAgent: 5 },
+      2: { client: 0.5, aiBot: 0.2, aiAgent: 0.4 },
+      3: { client: 50, aiBot: 15, aiAgent: 30 }
+    };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+
+    // Voice client: 2 * 5000 * 6 = 60,000
+    // SMS client: 0.5 * 20000 = 10,000
+    // Chat client: 50 * 3000 = 150,000
+    expect(result.clientTotal).toBe(220000);
+
+    // Voice AI: bot(1*1000*3.5=3500) + agent(5*4000*6=120000) = 123,500
+    // SMS AI: bot(0.2*4000=800) + agent(0.4*16000=6400) = 7,200
+    // Chat AI: bot(15*600=9000) + agent(30*2400=72000) = 81,000
+    expect(result.aiTotal).toBe(211700);
+  });
+
+  test('handles missing rates for a channel', () => {
+    const channels = [
+      { id: 99, type: 'voice', volume: 1000, humanHandleTime: 5 }
+    ];
+    const result = calculateChannelCosts(channels, {}, 3.5, 0.2);
+
+    expect(result.clientTotal).toBe(0);
+    expect(result.aiTotal).toBe(0);
+  });
+
+  test('handles empty channels array', () => {
+    const result = calculateChannelCosts([], {}, 3.5, 0.2);
+    expect(result.clientTotal).toBe(0);
+    expect(result.aiTotal).toBe(0);
+  });
+
+  test('handles null channels', () => {
+    const result = calculateChannelCosts(null, null, 3.5, 0.2);
+    expect(result.clientTotal).toBe(0);
+    expect(result.aiTotal).toBe(0);
+  });
+
+  test('handles zero volume', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 0, humanHandleTime: 6 }
+    ];
+    const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+
+    expect(result.clientTotal).toBe(0);
+    expect(result.aiTotal).toBe(0);
   });
 });
 
@@ -82,40 +211,13 @@ describe('calculateLedgerTotals', () => {
     expect(result.monthlyOpex).toBe(10000);
   });
 
-  test('per-minute cost calculated correctly', () => {
-    const items = [
-      { name: 'SIP Minutes', amount: 2, frequency: 'per minute', isAISide: false }
-    ];
-    const params = { volume: 10000, humanTime: 5, aiTime: 3 };
-    const result = calculateLedgerTotals(items, params);
-    expect(result.monthlyOpex).toBe(2 * 10000 * 5); // 100,000
-  });
-
-  test('per-minute cost uses aiTime for AI side', () => {
-    const items = [
-      { name: 'AI SIP Minutes', amount: 4, frequency: 'per minute', isAISide: true }
-    ];
-    const params = { volume: 10000, humanTime: 6, aiTime: 3.5 };
-    const result = calculateLedgerTotals(items, params);
-    expect(result.monthlyOpex).toBe(4 * 10000 * 3.5); // 140,000
-  });
-
-  test('per-session cost calculated correctly', () => {
-    const items = [
-      { name: 'Per Call Fee', amount: 5, frequency: 'per session' }
-    ];
-    const params = { volume: 10000 };
-    const result = calculateLedgerTotals(items, params);
-    expect(result.monthlyOpex).toBe(5 * 10000); // 50,000
-  });
-
   test('per-agent cost calculated correctly with deflection', () => {
     const items = [
       { name: 'CRM License', amount: 2000, frequency: 'per agent' }
     ];
     const params = { totalAgents: 100, deflectionRate: 0.2 };
     const result = calculateLedgerTotals(items, params);
-    expect(result.monthlyOpex).toBe(2000 * 80); // 160,000 (80 retained agents)
+    expect(result.monthlyOpex).toBe(2000 * 80);
   });
 
   test('per-agent cost without deflection', () => {
@@ -124,29 +226,18 @@ describe('calculateLedgerTotals', () => {
     ];
     const params = { totalAgents: 100, deflectionRate: 0 };
     const result = calculateLedgerTotals(items, params);
-    expect(result.monthlyOpex).toBe(2000 * 100); // 200,000
+    expect(result.monthlyOpex).toBe(2000 * 100);
   });
 
   test('handles multiple items with different frequencies', () => {
     const items = [
       { name: 'Setup', amount: 50000, frequency: 'one-time' },
       { name: 'Monthly Fee', amount: 10000, frequency: 'monthly' },
-      { name: 'Annual Contract', amount: 120000, frequency: 'yearly' },
-      { name: 'Per Minute', amount: 2, frequency: 'per minute', isAISide: false }
+      { name: 'Annual Contract', amount: 120000, frequency: 'yearly' }
     ];
-    const params = { volume: 10000, humanTime: 5 };
-    const result = calculateLedgerTotals(items, params);
+    const result = calculateLedgerTotals(items);
     expect(result.capex).toBe(50000);
-    expect(result.monthlyOpex).toBe(10000 + 10000 + 100000); // 120,000
-  });
-
-  test('handles zero volume gracefully', () => {
-    const items = [
-      { name: 'Per Minute', amount: 2, frequency: 'per minute' }
-    ];
-    const params = { volume: 0, humanTime: 5 };
-    const result = calculateLedgerTotals(items, params);
-    expect(result.monthlyOpex).toBe(0);
+    expect(result.monthlyOpex).toBe(10000 + 10000); // 20,000
   });
 
   test('handles missing global params', () => {
@@ -154,7 +245,7 @@ describe('calculateLedgerTotals', () => {
       { name: 'Per Agent', amount: 2000, frequency: 'per agent' }
     ];
     const result = calculateLedgerTotals(items);
-    expect(result.monthlyOpex).toBe(0); // No agents = 0 cost
+    expect(result.monthlyOpex).toBe(0);
   });
 
   test('allows negative amounts for credits', () => {
@@ -167,41 +258,59 @@ describe('calculateLedgerTotals', () => {
 });
 
 describe('calculateMonthlyCosts', () => {
-  test('calculates costs for both sides correctly', () => {
+  test('combines channel costs, ledger costs, and agent salaries', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 }
+    ];
+    const rates = { 1: { client: 2, aiBot: 1, aiAgent: 3 } };
     const clientItems = [
-      { name: 'Agent Salaries', amount: 1000000, frequency: 'monthly' }
+      { name: 'Office Rent', amount: 100000, frequency: 'monthly' }
     ];
     const aiItems = [
       { name: 'Setup', amount: 50000, frequency: 'one-time' },
       { name: 'Platform', amount: 30000, frequency: 'monthly' }
     ];
-    const params = { totalAgents: 100, deflectionRate: 0.2 };
+    const params = { totalAgents: 100, monthlySalary: 25000, deflectionRate: 0.2 };
 
-    const result = calculateMonthlyCosts(clientItems, aiItems, params);
+    const result = calculateMonthlyCosts(channels, rates, 3.5, clientItems, aiItems, params);
 
-    expect(result.clientMonthly).toBe(1000000);
-    expect(result.aiMonthly).toBe(30000);
+    // Client: voice(2*10000*6=120000) + rent(100000) + payroll(100*25000=2500000) = 2,720,000
+    expect(result.clientMonthly).toBe(2720000);
+    // AI channel: bot(1*2000*3.5=7000) + agent(3*8000*6=144000) = 151,000
+    // AI total: 151000 + platform(30000) + retainedPayroll(80*25000=2000000) = 2,181,000
+    expect(result.aiMonthly).toBe(2181000);
     expect(result.clientCapex).toBe(0);
     expect(result.aiCapex).toBe(50000);
     expect(result.agentsReplaced).toBe(20);
     expect(result.retainedAgents).toBe(80);
   });
 
+  test('includes agent salaries in monthly totals', () => {
+    const params = { totalAgents: 50, monthlySalary: 30000, deflectionRate: 0.2 };
+    const result = calculateMonthlyCosts([], {}, 0, [], [], params);
+
+    // Client payroll: 50 * 30000 = 1,500,000
+    expect(result.clientMonthly).toBe(1500000);
+    // Retained: ceil(50 * 0.8) = 40 agents
+    // AI payroll: 40 * 30000 = 1,200,000
+    expect(result.aiMonthly).toBe(1200000);
+  });
+
   test('calculates admin value correctly', () => {
     const params = {
       totalAgents: 100,
+      monthlySalary: 25000,
       deflectionRate: 0.2,
       adminHours: 160,
       hourlyRate: 150
     };
 
-    const result = calculateMonthlyCosts([], [], params);
-
+    const result = calculateMonthlyCosts([], {}, 3.5, [], [], params);
     expect(result.adminValue).toBe(24000);
   });
 
-  test('handles empty item arrays', () => {
-    const result = calculateMonthlyCosts([], [], {});
+  test('handles empty inputs', () => {
+    const result = calculateMonthlyCosts([], {}, 0, [], [], {});
 
     expect(result.clientMonthly).toBe(0);
     expect(result.aiMonthly).toBe(0);
@@ -240,106 +349,102 @@ describe('generateROITimeline', () => {
     expect(result.aiData.length).toBe(25);
   });
 
-  test('calculates cumulative costs correctly', () => {
+  test('calculates cumulative direct costs correctly', () => {
     const result = generateROITimeline(100000, 50000, 0, 50000);
 
-    // Month 0
+    // Month 0: client=0 (capex), ai=50000 (capex)
     expect(result.clientData[0]).toBe(0);
     expect(result.aiData[0]).toBe(50000);
-
     // Month 1
     expect(result.clientData[1]).toBe(100000);
     expect(result.aiData[1]).toBe(100000);
-
     // Month 12
     expect(result.clientData[12]).toBe(1200000);
-    expect(result.aiData[12]).toBe(50000 + 600000);
+    expect(result.aiData[12]).toBe(650000);
   });
 
-  test('finds break-even month correctly', () => {
-    const result = generateROITimeline(100000, 50000, 0, 50000);
-    expect(result.breakEvenMonth).toBe(2); // AI becomes cheaper at month 2
-  });
-
-  test('returns null break-even when AI never becomes cheaper', () => {
-    const result = generateROITimeline(50000, 100000, 0, 1000000);
-    expect(result.breakEvenMonth).toBeNull();
-  });
-
-  test('applies admin value offset to AI costs', () => {
-    const result = generateROITimeline(100000, 50000, 0, 50000, 10000);
-
-    // AI monthly = 50000 - 10000 = 40000
-    // Month 1: 50000 + (40000 * 1) = 90000
-    expect(result.aiData[1]).toBe(90000);
+  test('both lines always increase with positive monthly costs', () => {
+    const result = generateROITimeline(100000, 80000, 0, 50000);
+    for (let i = 1; i < result.clientData.length; i++) {
+      expect(result.clientData[i]).toBeGreaterThan(result.clientData[i - 1]);
+      expect(result.aiData[i]).toBeGreaterThan(result.aiData[i - 1]);
+    }
   });
 
   test('handles zero monthly costs', () => {
     const result = generateROITimeline(0, 0, 10000, 20000);
 
+    // Only capex, flat lines
+    expect(result.clientData[0]).toBe(10000);
     expect(result.clientData[12]).toBe(10000);
     expect(result.aiData[12]).toBe(20000);
-    expect(result.breakEvenMonth).toBeNull();
+  });
+
+  test('includes capex at month 0', () => {
+    const result = generateROITimeline(100000, 50000, 20000, 80000);
+    expect(result.clientData[0]).toBe(20000);
+    expect(result.aiData[0]).toBe(80000);
   });
 });
 
 describe('calculateDashboardMetrics', () => {
-  test('calculates all metrics correctly', () => {
+  test('calculates all metrics correctly with salaries included in monthly totals', () => {
+    // clientMonthly and aiMonthly already include agent salaries
     const result = calculateDashboardMetrics(
-      2000000,  // clientMonthly
-      300000,   // aiMonthly
-      0,        // clientCapex
-      50000,    // aiCapex
-      24000,    // adminValue
-      500000    // payrollSaved
+      2500000, 2000000, 0, 50000, 24000
     );
 
+    // monthlySavings = (2500000 - 2000000) + 24000 = 524,000
+    expect(result.clientMonthly).toBe(2500000);
+    expect(result.aiMonthly).toBe(2000000);
+    expect(result.monthlySavings).toBe(524000);
     expect(result.initialInvestment).toBe(50000);
-    expect(result.monthlySavings).toBe(2000000 - (300000 - 24000)); // 1,724,000
-    expect(result.payrollSaved).toBe(500000);
-    expect(result.year1NetSavings).toBe(
-      (0 + 2000000 * 12) - (50000 + (300000 - 24000) * 12)
-    ); // ~20.6M
+
+    // costReduction = 524000 / 2500000 * 100 = 21%
+    expect(result.costReduction).toBe(21);
+
+    // year1Client = 0 + 2500000*12 = 30,000,000
+    // year1AI = 50000 + (2000000-24000)*12 = 50000 + 23712000 = 23,762,000
+    // year1NetSavings = 30000000 - 23762000 = 6,238,000
+    expect(result.year1NetSavings).toBe(6238000);
   });
 
   test('finds break-even month', () => {
-    const result = calculateDashboardMetrics(
-      100000,
-      50000,
-      0,
-      50000,
-      0,
-      0
-    );
-
+    const result = calculateDashboardMetrics(100000, 50000, 0, 50000, 0);
+    // Month 1: client=100000, ai=50000+50000=100000 (not less)
+    // Month 2: client=200000, ai=50000+100000=150000 (less!)
     expect(result.breakEvenMonth).toBe(2);
   });
 
   test('returns null break-even when never reached', () => {
-    const result = calculateDashboardMetrics(
-      50000,
-      100000,
-      0,
-      1000000,
-      0,
-      0
-    );
-
+    const result = calculateDashboardMetrics(50000, 100000, 0, 1000000, 0);
     expect(result.breakEvenMonth).toBeNull();
   });
 
-  test('applies admin value offset', () => {
-    const result = calculateDashboardMetrics(
-      100000,
-      50000,
-      0,
-      0,
-      10000,  // adminValue
-      0
-    );
-
-    // Monthly savings = 100000 - (50000 - 10000) = 60000
+  test('applies admin value as additional savings', () => {
+    const result = calculateDashboardMetrics(100000, 50000, 0, 0, 10000);
+    // monthlySavings = (100000 - 50000) + 10000 = 60,000
     expect(result.monthlySavings).toBe(60000);
+  });
+
+  test('calculates cost reduction percentage', () => {
+    const result = calculateDashboardMetrics(200000, 100000, 0, 0, 0);
+    // monthlySavings = 100000, costReduction = 100000/200000*100 = 50%
+    expect(result.costReduction).toBe(50);
+    expect(result.monthlySavings).toBe(100000);
+  });
+
+  test('handles zero client monthly for cost reduction', () => {
+    const result = calculateDashboardMetrics(0, 0, 0, 0, 0);
+    expect(result.costReduction).toBe(0);
+  });
+
+  test('calculates year 1 net savings accounting for initial investment', () => {
+    const result = calculateDashboardMetrics(200000, 100000, 0, 100000, 0);
+    // year1Client = 200000*12 = 2,400,000
+    // year1AI = 100000 + 100000*12 = 1,300,000
+    // year1NetSavings = 1,100,000
+    expect(result.year1NetSavings).toBe(1100000);
   });
 });
 
@@ -379,70 +484,78 @@ describe('formatNumber', () => {
   });
 });
 
-describe('Real-world scenarios', () => {
-  test('Example: Basic call center with 100 agents, 20% deflection', () => {
+describe('Real-world scenario: Multi-channel call center with split rates', () => {
+  test('Voice + Chat channels with 100 agents, 20% deflection, split AI rates', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 2000 }
+    ];
+    const rates = {
+      1: { client: 2, aiBot: 1, aiAgent: 5 },
+      2: { client: 50, aiBot: 15, aiAgent: 30 }
+    };
     const clientItems = [
-      { name: 'Agent Salaries', amount: 2500000, frequency: 'monthly' },
       { name: 'CRM Licenses', amount: 2000, frequency: 'per agent' },
-      { name: 'SIP Minutes', amount: 2, frequency: 'per minute', isAISide: false },
       { name: 'PBX Maintenance', amount: 120000, frequency: 'yearly' }
     ];
-
     const aiItems = [
       { name: 'Setup Fee', amount: 50000, frequency: 'one-time' },
       { name: 'AI Platform', amount: 30000, frequency: 'monthly' },
-      { name: 'AI Licenses', amount: 1500, frequency: 'per agent' },
-      { name: 'AI SIP Minutes', amount: 4, frequency: 'per minute', isAISide: true }
+      { name: 'AI Licenses', amount: 1500, frequency: 'per agent' }
     ];
-
     const params = {
-      volume: 10000,
-      humanTime: 6,
-      aiTime: 3.5,
       totalAgents: 100,
+      monthlySalary: 25000,
       deflectionRate: 0.2,
       adminHours: 160,
       hourlyRate: 150
     };
 
-    const result = calculateMonthlyCosts(clientItems, aiItems, params);
+    const result = calculateMonthlyCosts(channels, rates, 3.5, clientItems, aiItems, params);
 
-    // Client costs
-    // Salaries: 2,500,000
-    // CRM: 2000 × 80 = 160,000
-    // SIP: 2 × 10000 × 6 = 120,000
-    // PBX: 120000/12 = 10,000
-    // Total: 2,790,000
-    expect(result.clientMonthly).toBe(2790000);
+    // Channel costs:
+    // Voice client: 2 * 5000 * 6 = 60,000
+    // Chat client: 50 * 2000 = 100,000
+    // Ledger client: CRM(2000*80=160,000) + PBX(120000/12=10,000) = 170,000
+    // Agent payroll: 100 * 25000 = 2,500,000
+    // Total client: 60,000 + 100,000 + 170,000 + 2,500,000 = 2,830,000
+    expect(result.clientMonthly).toBe(2830000);
 
-    // AI costs
-    // Platform: 30,000
-    // Licenses: 1500 × 80 = 120,000
-    // SIP: 4 × 10000 × 3.5 = 140,000
-    // Total: 290,000
-    expect(result.aiMonthly).toBe(290000);
+    // Voice AI:
+    //   bot: 1 * 1000 * 3.5 = 3,500
+    //   agent: 5 * 4000 * 6 = 120,000
+    //   subtotal: 123,500
+    // Chat AI:
+    //   bot: 15 * 400 = 6,000
+    //   agent: 30 * 1600 = 48,000
+    //   subtotal: 54,000
+    // Ledger AI: Platform(30,000) + Licenses(1500*80=120,000) = 150,000
+    // Retained payroll: 80 * 25000 = 2,000,000
+    // Total AI: 123,500 + 54,000 + 150,000 + 2,000,000 = 2,327,500
+    expect(result.aiMonthly).toBe(2327500);
 
     expect(result.aiCapex).toBe(50000);
     expect(result.agentsReplaced).toBe(20);
     expect(result.adminValue).toBe(24000);
 
-    // Calculate payroll saved
-    const payrollSaved = calculatePayrollSaved(20, 25000, 2000);
-    expect(payrollSaved).toBe(540000);
-
-    // Dashboard metrics
+    // Dashboard metrics (salaries already in monthly totals)
     const metrics = calculateDashboardMetrics(
-      result.clientMonthly,
-      result.aiMonthly,
-      result.clientCapex,
-      result.aiCapex,
-      result.adminValue,
-      payrollSaved
+      result.clientMonthly, result.aiMonthly,
+      result.clientCapex, result.aiCapex,
+      result.adminValue
     );
 
+    // monthlySavings = (2830000 - 2327500) + 24000 = 526,500
+    // costReduction = 526500 / 2830000 * 100 ≈ 19%
+    expect(metrics.clientMonthly).toBe(2830000);
+    expect(metrics.aiMonthly).toBe(2327500);
+    expect(metrics.monthlySavings).toBe(526500);
+    expect(metrics.costReduction).toBe(19);
     expect(metrics.initialInvestment).toBe(50000);
-    expect(metrics.monthlySavings).toBe(2790000 - (290000 - 24000)); // 2,524,000
-    expect(metrics.payrollSaved).toBe(540000);
-    expect(metrics.breakEvenMonth).toBe(1); // Should break even very fast
+    expect(metrics.breakEvenMonth).toBe(1);
+
+    // Payroll saved is still tracked for display in Efficiency Offset
+    const payrollSaved = calculatePayrollSaved(20, 25000);
+    expect(payrollSaved).toBe(500000);
   });
 });

@@ -1,475 +1,397 @@
 /**
- * AI Rudder Cost Calculator - UI Module
+ * AI Rudder Cost Calculator - UI Module (ES Module)
  *
- * Handles all DOM manipulation and user interactions
+ * DOM rendering, event delegation, modals, validation, toasts.
+ * Uses escapeHTML for all user-entered text.
  */
 
-// Use global AIRudder and AIRudderStorage namespaces
-(function() {
-  'use strict';
+import { formatCurrency, formatNumber } from './calculator.js';
+import { t } from './i18n.js';
 
-  // Global state
-  let clientItems = [];
-  let aiItems = [];
-  let roiChart = null;
+// ===== SVG Icons (inline, no CDN) =====
+const ICONS = {
+  plus: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  save: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+  folderOpen: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+  trash: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+  x: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+};
 
-  /**
-   * Initialize the application
-   */
-  function init() {
-    setupEventListeners();
-    loadScenariosDropdown();
+// ===== Utility =====
 
-    // Set default values
-    document.getElementById('totalVolume').value = 10000;
-    document.getElementById('humanTime').value = 6;
-    document.getElementById('aiTime').value = 3.5;
-    document.getElementById('totalAgents').value = 100;
-    document.getElementById('monthlySalary').value = 25000;
-    document.getElementById('deflectionRate').value = 20;
-    document.getElementById('adminHours').value = 160;
-    document.getElementById('hourlyRate').value = 150;
+/**
+ * Escape HTML to prevent XSS
+ */
+export function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
-    recalculate();
-  }
+// ===== Channel Type Config =====
 
-  /**
-   * Setup event listeners
-   */
-  function setupEventListeners() {
-    // Global parameters
-    document.getElementById('totalVolume').addEventListener('input', recalculate);
-    document.getElementById('humanTime').addEventListener('input', recalculate);
-    document.getElementById('aiTime').addEventListener('input', recalculate);
-    document.getElementById('totalAgents').addEventListener('input', recalculate);
-    document.getElementById('monthlySalary').addEventListener('input', recalculate);
+/**
+ * Get channel types with translated labels.
+ * Called fresh each render so labels reflect current language.
+ */
+function getChannelTypes() {
+  return {
+    voice: { label: t('channel.voice'), unit: t('channel.perMinute'), hasHandleTime: true },
+    sms: { label: t('channel.sms'), unit: t('channel.perMessage'), hasHandleTime: false },
+    chat: { label: t('channel.chat'), unit: t('channel.perSession'), hasHandleTime: false }
+  };
+}
 
-    // Operation efficiency
-    document.getElementById('deflectionRate').addEventListener('input', handleDeflectionChange);
-    document.getElementById('adminHours').addEventListener('input', recalculate);
-    document.getElementById('hourlyRate').addEventListener('input', recalculate);
+// ===== Rendering Functions =====
 
-    // Add item buttons
-    document.getElementById('addClientItem').addEventListener('click', () => addCostItem('client'));
-    document.getElementById('addAIItem').addEventListener('click', () => addCostItem('ai'));
+/**
+ * Render channel cards in Section 1
+ */
+export function renderChannels(container, channels) {
+  if (!container) return;
 
-    // Scenario management
-    document.getElementById('saveScenarioBtn').addEventListener('click', handleSaveScenario);
-    document.getElementById('loadScenarioBtn').addEventListener('click', handleLoadScenario);
-    document.getElementById('deleteScenarioBtn').addEventListener('click', handleDeleteScenario);
-  }
+  const channelTypes = getChannelTypes();
 
-  /**
-   * Handle deflection rate slider change
-   */
-  function handleDeflectionChange(e) {
-    const value = e.target.value;
-    document.getElementById('deflectionValue').textContent = `${value}%`;
-    recalculate();
-  }
+  container.innerHTML = channels.map(channel => {
+    const config = channelTypes[channel.type] || channelTypes.voice;
+    const isVoice = channel.type === 'voice';
+    const fieldsClass = isVoice ? 'channel-card-fields three-col' : 'channel-card-fields';
 
-  /**
-   * Get global parameters from UI
-   */
-  function getGlobalParams() {
-    return {
-      volume: parseFloat(document.getElementById('totalVolume').value) || 0,
-      humanTime: parseFloat(document.getElementById('humanTime').value) || 0,
-      aiTime: parseFloat(document.getElementById('aiTime').value) || 0,
-      totalAgents: parseFloat(document.getElementById('totalAgents').value) || 0,
-      monthlySalary: parseFloat(document.getElementById('monthlySalary').value) || 0,
-      deflectionRate: parseFloat(document.getElementById('deflectionRate').value) / 100 || 0,
-      adminHours: parseFloat(document.getElementById('adminHours').value) || 0,
-      hourlyRate: parseFloat(document.getElementById('hourlyRate').value) || 0
-    };
-  }
-
-  /**
-   * Add a cost item
-   */
-  function addCostItem(side) {
-    const item = {
-      id: Date.now() + Math.random(),
-      name: '',
-      amount: 0,
-      frequency: 'monthly',
-      category: 'technology'
-    };
-
-    if (side === 'client') {
-      clientItems.push(item);
-    } else {
-      aiItems.push(item);
-    }
-
-    renderCostItems();
-    recalculate();
-  }
-
-  /**
-   * Remove a cost item
-   */
-  function removeCostItem(side, id) {
-    if (side === 'client') {
-      clientItems = clientItems.filter(item => item.id !== id);
-    } else {
-      aiItems = aiItems.filter(item => item.id !== id);
-    }
-
-    renderCostItems();
-    recalculate();
-  }
-
-  /**
-   * Update a cost item
-   */
-  function updateCostItem(side, id, field, value) {
-    const items = side === 'client' ? clientItems : aiItems;
-    const item = items.find(i => i.id === id);
-
-    if (item) {
-      if (field === 'amount') {
-        item[field] = parseFloat(value) || 0;
-      } else {
-        item[field] = value;
-      }
-      recalculate();
-    }
-  }
-
-  /**
-   * Render cost items
-   */
-  function renderCostItems() {
-    renderSideItems('client', clientItems);
-    renderSideItems('ai', aiItems);
-  }
-
-  /**
-   * Render items for one side
-   */
-  function renderSideItems(side, items) {
-    const container = document.getElementById(side === 'client' ? 'clientItems' : 'aiItems');
-
-    if (items.length === 0) {
-      container.innerHTML = '<div class="text-center text-slate-400 py-8">No cost items added yet</div>';
-      return;
-    }
-
-    container.innerHTML = items.map(item => `
-      <div class="cost-item">
-        <div class="grid grid-cols-12 gap-2 items-center">
-          <div class="col-span-4">
-            <input
-              type="text"
-              value="${item.name}"
-              placeholder="Cost Name"
-              class="text-sm"
-              onchange="window.AIRudderUI.updateItem('${side}', ${item.id}, 'name', this.value)"
-            >
+    return `
+      <div class="channel-card" data-channel-id="${channel.id}">
+        <div class="channel-card-header">
+          <select data-channel-id="${channel.id}" data-field="type" style="max-width:120px;">
+            ${Object.entries(channelTypes).map(([key, val]) =>
+              `<option value="${key}" ${channel.type === key ? 'selected' : ''}>${val.label}</option>`
+            ).join('')}
+          </select>
+          <button class="btn btn-ghost" data-action="remove-channel" data-channel-id="${channel.id}" title="${t('misc.removeChannel')}">
+            ${ICONS.x}
+          </button>
+        </div>
+        <div class="${fieldsClass}">
+          <div class="field-group">
+            <label class="field-label">
+              ${t('field.channelName')}
+              <span class="field-description">${t('field.channelNameDesc')}</span>
+            </label>
+            <input type="text" value="${escapeHTML(channel.name || '')}" placeholder="${t('misc.placeholder.channelName')}"
+                   data-channel-id="${channel.id}" data-field="name">
           </div>
-          <div class="col-span-3">
-            <input
-              type="number"
-              value="${item.amount}"
-              placeholder="Amount"
-              min="0"
-              step="100"
-              class="text-sm"
-              onchange="window.AIRudderUI.updateItem('${side}', ${item.id}, 'amount', this.value)"
-            >
+          <div class="field-group">
+            <label class="field-label">
+              ${t('field.volume')}
+              <span class="field-description">${t('field.volumeDesc')}</span>
+            </label>
+            <input type="number" value="${channel.volume || 0}" min="0" step="100"
+                   data-channel-id="${channel.id}" data-field="volume">
           </div>
-          <div class="col-span-3">
-            <select
-              class="text-sm"
-              onchange="window.AIRudderUI.updateItem('${side}', ${item.id}, 'frequency', this.value)"
-            >
-              <option value="one-time" ${item.frequency === 'one-time' ? 'selected' : ''}>One-time</option>
-              <option value="monthly" ${item.frequency === 'monthly' ? 'selected' : ''}>Monthly</option>
-              <option value="yearly" ${item.frequency === 'yearly' ? 'selected' : ''}>Yearly</option>
-              <option value="per minute" ${item.frequency === 'per minute' ? 'selected' : ''}>Per Minute</option>
-              <option value="per session" ${item.frequency === 'per session' ? 'selected' : ''}>Per Session</option>
-              <option value="per agent" ${item.frequency === 'per agent' ? 'selected' : ''}>Per Agent</option>
-            </select>
+          ${isVoice ? `
+          <div class="field-group">
+            <label class="field-label">
+              ${t('field.handleTime')}
+              <span class="field-description">${t('field.handleTimeDesc')}</span>
+            </label>
+            <input type="number" value="${channel.humanHandleTime || 0}" min="0" step="0.5"
+                   data-channel-id="${channel.id}" data-field="humanHandleTime">
           </div>
-          <div class="col-span-2 text-right">
-            <button
-              onclick="window.AIRudderUI.removeItem('${side}', ${item.id})"
-              class="text-red-500 hover:text-red-700 p-2"
-              title="Remove item"
-            >
-              <i data-feather="x" class="w-5 h-5"></i>
-            </button>
-          </div>
+          ` : ''}
         </div>
       </div>
-    `).join('');
+    `;
+  }).join('');
+}
 
-    // Re-initialize Feather icons
-    if (window.feather) {
-      feather.replace();
-    }
+/**
+ * Render rates comparison table in Section 2
+ * Adds numbered labels when multiple channels of the same type exist
+ */
+export function renderRates(container, channels, rates, aiHandleTime) {
+  if (!container) return;
+
+  const channelTypes = getChannelTypes();
+  const hasVoice = channels.some(c => c.type === 'voice');
+
+  if (channels.length === 0) {
+    container.innerHTML = `<p style="color: var(--muted-text); font-size: 14px;">${t('misc.noChannels')}</p>`;
+    return;
   }
 
-  /**
-   * Recalculate everything and update UI
-   */
-  function recalculate() {
-    const params = getGlobalParams();
+  // Count channels per type for numbered labels
+  const typeCounts = {};
+  channels.forEach(c => { typeCounts[c.type] = (typeCounts[c.type] || 0) + 1; });
 
-    // Calculate monthly costs
-    const results = AIRudder.calculateMonthlyCosts(clientItems, aiItems, params);
+  // Track which index we're at for each type
+  const typeIndex = {};
 
-    // Calculate payroll saved
-    const payrollSaved = AIRudder.calculatePayrollSaved(
-      results.agentsReplaced,
-      params.monthlySalary,
-      0 // No legacy license cost tracked separately for now
-    );
+  let html = `
+    <table class="rates-table">
+      <thead>
+        <tr>
+          <th>${t('rates.channel')}</th>
+          <th>${t('rates.clientRate')}</th>
+          <th>${t('rates.aiBotRate')}</th>
+          <th>${t('rates.aiAgentRate')}</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
 
-    // Update efficiency offset displays
-    document.getElementById('agentsReplaced').textContent =
-      `${AIRudder.formatNumber(results.agentsReplaced)} of ${AIRudder.formatNumber(params.totalAgents)}`;
-    document.getElementById('trafficToAI').textContent =
-      `${AIRudder.formatNumber(params.deflectionRate * 100)}%`;
-    document.getElementById('payrollDisplay').textContent =
-      `${AIRudder.formatCurrency(payrollSaved)}/mo`;
-    document.getElementById('adminValueDisplay').textContent =
-      `${AIRudder.formatCurrency(results.adminValue)}/mo`;
+  channels.forEach(channel => {
+    const config = channelTypes[channel.type] || channelTypes.voice;
+    const rate = rates[channel.id] || { client: 0, aiBot: 0, aiAgent: 0 };
 
-    // Calculate dashboard metrics
-    const metrics = AIRudder.calculateDashboardMetrics(
-      results.clientMonthly,
-      results.aiMonthly,
-      results.clientCapex,
-      results.aiCapex,
-      results.adminValue,
-      payrollSaved
-    );
+    // Use channel name if provided, otherwise fall back to type label with numbering
+    typeIndex[channel.type] = (typeIndex[channel.type] || 0) + 1;
+    const label = channel.name
+      ? escapeHTML(channel.name)
+      : (typeCounts[channel.type] > 1
+        ? `${config.label} #${typeIndex[channel.type]}`
+        : config.label);
 
-    // Update dashboard
-    document.getElementById('metricInitialInvestment').textContent =
-      AIRudder.formatCurrency(metrics.initialInvestment);
-    document.getElementById('metricMonthlySavings').textContent =
-      AIRudder.formatCurrency(metrics.monthlySavings);
-    document.getElementById('metricPayrollSaved').textContent =
-      AIRudder.formatCurrency(metrics.payrollSaved);
-    document.getElementById('metricYear1Savings').textContent =
-      AIRudder.formatCurrency(metrics.year1NetSavings);
-    document.getElementById('metricBreakEven').textContent =
-      metrics.breakEvenMonth !== null ? `Month ${metrics.breakEvenMonth}` : 'N/A';
+    html += `
+      <tr data-channel-id="${channel.id}">
+        <td>
+          <span class="channel-label">${label}</span>
+          <span class="unit">${config.unit}</span>
+        </td>
+        <td>
+          <input type="number" value="${rate.client}" min="0" step="0.1"
+                 data-channel-id="${channel.id}" data-rate-side="client">
+        </td>
+        <td>
+          <input type="number" value="${rate.aiBot}" min="0" step="0.1"
+                 data-channel-id="${channel.id}" data-rate-side="aiBot">
+        </td>
+        <td>
+          <input type="number" value="${rate.aiAgent}" min="0" step="0.1"
+                 data-channel-id="${channel.id}" data-rate-side="aiAgent">
+        </td>
+      </tr>
+    `;
+  });
 
-    // Update chart
-    updateChart(results, params);
+  html += '</tbody></table>';
+
+  if (hasVoice) {
+    html += `
+      <div class="field-group" style="margin-top: 16px; max-width: 250px;">
+        <label class="field-label">
+          ${t('field.aiHandleTime')}
+          <span class="field-description">${t('field.aiHandleTimeDesc')}</span>
+        </label>
+        <input type="number" id="aiHandleTime" value="${aiHandleTime}" min="0" step="0.1">
+      </div>
+    `;
   }
 
-  /**
-   * Update ROI chart
-   */
-  function updateChart(results, params) {
-    const timeline = AIRudder.generateROITimeline(
-      results.clientMonthly,
-      results.aiMonthly,
-      results.clientCapex,
-      results.aiCapex,
-      results.adminValue
-    );
+  container.innerHTML = html;
+}
 
-    const ctx = document.getElementById('roiChart').getContext('2d');
+/**
+ * Render cost items for one side (client or AI)
+ */
+export function renderCostItems(container, items, side) {
+  if (!container) return;
 
-    if (roiChart) {
-      roiChart.destroy();
-    }
-
-    roiChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: timeline.labels,
-        datasets: [
-          {
-            label: 'Client Current State',
-            data: timeline.clientData,
-            borderColor: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            borderWidth: 3,
-            tension: 0.1,
-            fill: false
-          },
-          {
-            label: 'AI Rudder Solution',
-            data: timeline.aiData,
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-            borderWidth: 3,
-            tension: 0.1,
-            fill: false
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              font: { size: 14, weight: '500' },
-              padding: 15
-            }
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-              label: function(context) {
-                return context.dataset.label + ': ' + AIRudder.formatCurrency(context.parsed.y);
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return AIRudder.formatCurrency(value);
-              }
-            },
-            grid: {
-              color: '#e5e7eb'
-            }
-          },
-          x: {
-            grid: {
-              display: false
-            }
-          }
-        }
-      }
-    });
+  if (items.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color: var(--muted-text); padding: 24px 0; font-size: 14px;">${t('misc.noCostItems')}</div>`;
+    return;
   }
 
-  /**
-   * Handle save scenario
-   */
-  function handleSaveScenario() {
-    const name = prompt('Enter scenario name:');
-    if (!name) return;
+  container.innerHTML = items.map(item => `
+    <div class="cost-item" data-item-id="${item.id}" data-side="${side}">
+      <div class="cost-item-header">
+        <input type="text" value="${escapeHTML(item.name)}" placeholder="${t('misc.placeholder.costName')}"
+               data-item-id="${item.id}" data-side="${side}" data-field="name">
+        <button class="btn btn-ghost" data-action="remove-item" data-item-id="${item.id}" data-side="${side}" title="${t('misc.remove')}">
+          ${ICONS.x}
+        </button>
+      </div>
+      <div class="cost-item-fields">
+        <input type="number" value="${item.amount}" placeholder="${t('field.amount')}" min="0" step="100"
+               data-item-id="${item.id}" data-side="${side}" data-field="amount">
+        <select data-item-id="${item.id}" data-side="${side}" data-field="frequency">
+          <option value="one-time" ${item.frequency === 'one-time' ? 'selected' : ''}>${t('freq.oneTime')}</option>
+          <option value="monthly" ${item.frequency === 'monthly' ? 'selected' : ''}>${t('freq.monthly')}</option>
+          <option value="yearly" ${item.frequency === 'yearly' ? 'selected' : ''}>${t('freq.yearly')}</option>
+          <option value="per agent" ${item.frequency === 'per agent' ? 'selected' : ''}>${t('freq.perAgent')}</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
 
-    const data = {
-      globalParams: getGlobalParams(),
-      clientItems: clientItems.map(({ id, ...rest }) => rest), // Remove IDs
-      aiItems: aiItems.map(({ id, ...rest }) => rest)
-    };
-
-    if (AIRudderStorage.saveScenario(name, data)) {
-      alert(`Scenario "${name}" saved successfully!`);
-      loadScenariosDropdown();
-    } else {
-      alert('Failed to save scenario');
-    }
-  }
-
-  /**
-   * Handle load scenario
-   */
-  function handleLoadScenario() {
-    const dropdown = document.getElementById('scenarioDropdown');
-    const name = dropdown.value;
-
-    if (!name) {
-      alert('Please select a scenario from the dropdown');
-      return;
-    }
-
-    const scenario = AIRudderStorage.loadScenario(name);
-    if (!scenario) {
-      alert('Failed to load scenario');
-      return;
-    }
-
-    // Load global params
-    const params = scenario.globalParams || {};
-    document.getElementById('totalVolume').value = params.volume || 0;
-    document.getElementById('humanTime').value = params.humanTime || 0;
-    document.getElementById('aiTime').value = params.aiTime || 0;
-    document.getElementById('totalAgents').value = params.totalAgents || 0;
-    document.getElementById('monthlySalary').value = params.monthlySalary || 0;
-    document.getElementById('deflectionRate').value = (params.deflectionRate || 0) * 100;
-    document.getElementById('deflectionValue').textContent = `${Math.round((params.deflectionRate || 0) * 100)}%`;
-    document.getElementById('adminHours').value = params.adminHours || 0;
-    document.getElementById('hourlyRate').value = params.hourlyRate || 0;
-
-    // Load items (add IDs back)
-    clientItems = (scenario.clientItems || []).map(item => ({
-      ...item,
-      id: Date.now() + Math.random()
-    }));
-
-    aiItems = (scenario.aiItems || []).map(item => ({
-      ...item,
-      id: Date.now() + Math.random()
-    }));
-
-    renderCostItems();
-    recalculate();
-
-    alert(`Scenario "${name}" loaded successfully!`);
-  }
-
-  /**
-   * Handle delete scenario
-   */
-  function handleDeleteScenario() {
-    const dropdown = document.getElementById('scenarioDropdown');
-    const name = dropdown.value;
-
-    if (!name) {
-      alert('Please select a scenario from the dropdown');
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete scenario "${name}"?`)) {
-      return;
-    }
-
-    if (AIRudderStorage.deleteScenario(name)) {
-      alert(`Scenario "${name}" deleted successfully!`);
-      loadScenariosDropdown();
-    } else {
-      alert('Failed to delete scenario');
-    }
-  }
-
-  /**
-   * Load scenarios dropdown
-   */
-  function loadScenariosDropdown() {
-    const dropdown = document.getElementById('scenarioDropdown');
-    const scenarios = AIRudderStorage.listScenarios();
-
-    dropdown.innerHTML = '<option value="">Select a scenario...</option>';
-
-    scenarios.forEach(scenario => {
-      const option = document.createElement('option');
-      option.value = scenario.name;
-      option.textContent = scenario.name;
-      dropdown.appendChild(option);
-    });
-  }
-
-  // Expose functions to window for inline event handlers
-  window.AIRudderUI = {
-    updateItem: updateCostItem,
-    removeItem: removeCostItem
+/**
+ * Render dashboard metrics (6 KPIs telling the savings story)
+ * Story: What you pay → What AI costs → What you save → When it pays off
+ */
+export function renderDashboard(metrics) {
+  const setIfExists = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = value;
   };
 
-  // Initialize on DOM load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  setIfExists('metricClientMonthly', formatCurrency(metrics.clientMonthly));
+  setIfExists('metricAIMonthly', formatCurrency(metrics.aiMonthly));
+  setIfExists('metricMonthlySavings', formatCurrency(metrics.monthlySavings));
+  setIfExists('metricCostReduction', `${formatNumber(metrics.costReduction)}%`);
+  setIfExists('metricInitialInvestment', formatCurrency(metrics.initialInvestment));
+  setIfExists('metricBreakEven',
+    metrics.breakEvenMonth !== null
+      ? t('chart.month').replace('{n}', metrics.breakEvenMonth)
+      : t('misc.na')
+  );
+  setIfExists('metricYear1Savings', formatCurrency(metrics.year1NetSavings));
+}
+
+/**
+ * Render efficiency offset derived displays
+ */
+export function renderEfficiencyOffset(data) {
+  const setIfExists = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = value;
+  };
+
+  setIfExists('agentsReplaced', `${formatNumber(data.agentsReplaced)} of ${formatNumber(data.totalAgents)}`);
+  setIfExists('trafficToAI', `${formatNumber(data.deflectionRate * 100)}%`);
+  setIfExists('payrollDisplay', `${formatCurrency(data.payrollSaved)}/mo`);
+  setIfExists('adminValueDisplay', `${formatCurrency(data.adminValue)}/mo`);
+  setIfExists('deflectionValue', `${Math.round(data.deflectionRate * 100)}%`);
+}
+
+/**
+ * Render scenarios dropdown
+ */
+export function renderScenariosDropdown(scenarios) {
+  const dropdown = document.getElementById('scenarioDropdown');
+  if (!dropdown) return;
+
+  dropdown.innerHTML = `<option value="">${t('misc.selectScenario')}</option>`;
+  scenarios.forEach(scenario => {
+    const option = document.createElement('option');
+    option.value = scenario.name;
+    option.textContent = scenario.name;
+    dropdown.appendChild(option);
+  });
+}
+
+// ===== Modal =====
+
+/**
+ * Show a modal dialog
+ * @param {Object} config - {title, message, inputPlaceholder?, onConfirm, confirmLabel?, confirmClass?}
+ */
+export function showModal(config) {
+  const overlay = document.getElementById('modalOverlay');
+  const title = document.getElementById('modalTitle');
+  const message = document.getElementById('modalMessage');
+  const input = document.getElementById('modalInput');
+  const confirmBtn = document.getElementById('modalConfirm');
+  const cancelBtn = document.getElementById('modalCancel');
+
+  if (!overlay) return;
+
+  title.textContent = config.title || '';
+  message.textContent = config.message || '';
+
+  if (config.inputPlaceholder) {
+    input.style.display = 'block';
+    input.value = '';
+    input.placeholder = config.inputPlaceholder;
+    setTimeout(() => input.focus(), 100);
   } else {
-    init();
+    input.style.display = 'none';
   }
 
-})();
+  confirmBtn.textContent = config.confirmLabel || t('btn.confirm');
+  confirmBtn.className = `btn ${config.confirmClass || 'btn-primary'}`;
+
+  cancelBtn.textContent = t('btn.cancel');
+
+  // Clean up old listeners
+  const newConfirm = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+  const newCancel = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+  newConfirm.addEventListener('click', () => {
+    const value = config.inputPlaceholder ? input.value : true;
+    hideModal();
+    if (config.onConfirm) config.onConfirm(value);
+  });
+
+  newCancel.addEventListener('click', hideModal);
+
+  overlay.classList.add('active');
+
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) hideModal();
+  }, { once: true });
+}
+
+/**
+ * Hide the modal
+ */
+export function hideModal() {
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+// ===== Toast =====
+
+/**
+ * Show a toast message
+ * @param {string} message - Toast text
+ * @param {string} type - 'success' | 'error' | '' (default)
+ */
+export function showToast(message, type = '') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'toastOut 0.3s ease-in forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// ===== Validation =====
+
+/**
+ * Show validation error on a field
+ */
+export function showValidationError(el, msg) {
+  const group = el.closest('.field-group');
+  if (!group) return;
+
+  group.classList.add('field-error');
+  let errorEl = group.querySelector('.error-message');
+  if (!errorEl) {
+    errorEl = document.createElement('div');
+    errorEl.className = 'error-message';
+    group.appendChild(errorEl);
+  }
+  errorEl.textContent = msg;
+}
+
+/**
+ * Clear validation error on a field
+ */
+export function clearValidationError(el) {
+  const group = el.closest('.field-group');
+  if (!group) return;
+
+  group.classList.remove('field-error');
+  const errorEl = group.querySelector('.error-message');
+  if (errorEl) errorEl.remove();
+}
+
+// ===== Export icons for use in HTML =====
+export { ICONS };

@@ -3,331 +3,285 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Rudder Cost Calculator - ROI Assessment Tool</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>AI Rudder Cost Calculator</title>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Feather Icons -->
-  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-
-  <!-- Custom Styles -->
+  <!-- Custom Styles (no Tailwind, no Feather Icons) -->
   <link rel="stylesheet" href="css/styles.css">
-
-  <style>
-    /* Inline critical styles for AI Rudder brand */
-    :root {
-      --brand-blue: #2563eb;
-      --teal-accent: #44C9C1;
-      --dark-navy: #024F94;
-      --client-legacy: #ef4444;
-      --savings-green: #22c55e;
-    }
-
-    body {
-      background-color: #f7fbff;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px -10px rgba(2, 8, 23, 0.10);
-      border: 1px solid #e5e7eb;
-    }
-
-    .btn-primary {
-      background-color: var(--brand-blue);
-      color: white;
-      border-radius: 9999px;
-      padding: 12px 24px;
-      font-weight: 500;
-      transition: opacity 0.2s;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-    }
-
-    .btn-secondary {
-      background-color: #f1f5f9;
-      color: #334155;
-      border-radius: 9999px;
-      padding: 10px 20px;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background-color: #e2e8f0;
-    }
-
-    .btn-danger {
-      background-color: var(--client-legacy);
-      color: white;
-      border-radius: 9999px;
-      padding: 10px 20px;
-      font-weight: 500;
-      transition: opacity 0.2s;
-    }
-
-    .btn-danger:hover {
-      opacity: 0.9;
-    }
-
-    input, select {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 10px 14px;
-      width: 100%;
-      font-size: 14px;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-      border-color: var(--brand-blue);
-    }
-
-    .metric-card {
-      text-align: center;
-      padding: 20px;
-    }
-
-    .metric-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #111827;
-      margin: 8px 0;
-    }
-
-    .metric-label {
-      font-size: 13px;
-      color: #64748b;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .cost-item {
-      margin-bottom: 12px;
-      padding: 12px;
-      background: #f8fafc;
-      border-radius: 8px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .cost-item:hover {
-      background: #f1f5f9;
-    }
-
-    .slider {
-      width: 100%;
-      height: 8px;
-      border-radius: 5px;
-      background: #e5e7eb;
-      outline: none;
-      -webkit-appearance: none;
-    }
-
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--brand-blue);
-      cursor: pointer;
-    }
-
-    .slider::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--brand-blue);
-      cursor: pointer;
-      border: none;
-    }
-  </style>
 </head>
-<body class="p-6">
+<body>
 
-  <div class="max-w-7xl mx-auto">
+  <div class="app-container">
 
     <!-- Header -->
-    <div class="card p-6 mb-6">
-      <div class="flex justify-between items-center">
+    <div class="card header">
+      <div class="header-brand">
+        <img src="https://airudder.com/wp-content/themes/airudder-theme/assets/images/logo-footer.webp" alt="AI Rudder" class="header-logo">
+        <div class="header-divider"></div>
         <div>
-          <h1 class="text-3xl font-semibold text-slate-900">AI Rudder Cost Calculator</h1>
-          <p class="text-slate-600 mt-1">Interactive ROI Analysis Tool for Collaborative Sales Sessions</p>
+          <h1 data-i18n="header.title">Cost Calculator</h1>
+          <p class="header-subtitle" data-i18n="header.subtitle">Interactive ROI Analysis for Collaborative Sales Sessions</p>
         </div>
-        <div class="flex gap-3">
-          <select id="scenarioDropdown" class="w-64">
-            <option value="">Select a scenario...</option>
-          </select>
-          <button id="saveScenarioBtn" class="btn-secondary">
-            <i data-feather="save" class="w-4 h-4 inline"></i> Save
-          </button>
-          <button id="loadScenarioBtn" class="btn-secondary">
-            <i data-feather="folder-open" class="w-4 h-4 inline"></i> Load
-          </button>
-          <button id="deleteScenarioBtn" class="btn-danger">
-            <i data-feather="trash-2" class="w-4 h-4 inline"></i> Delete
-          </button>
+      </div>
+      <div class="header-actions">
+        <div class="lang-toggle">
+          <button id="langEn" class="active" data-lang="en">EN</button>
+          <button id="langTh" data-lang="th">TH</button>
         </div>
+        <a href="user-guide.html" class="btn btn-secondary" style="text-decoration: none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span data-i18n="btn.guide">Guide</span>
+        </a>
+        <select id="scenarioDropdown">
+          <option value="" data-i18n="misc.selectScenario">Select a scenario...</option>
+        </select>
+        <button id="saveScenarioBtn" class="btn btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span data-i18n="btn.save">Save</span>
+        </button>
+        <button id="loadScenarioBtn" class="btn btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span data-i18n="btn.load">Load</span>
+        </button>
+        <button id="deleteScenarioBtn" class="btn btn-danger">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <span data-i18n="btn.delete">Delete</span>
+        </button>
       </div>
     </div>
 
-    <!-- Dashboard Metrics -->
-    <div class="grid grid-cols-5 gap-4 mb-6">
-      <div class="card metric-card">
-        <div class="metric-label">Initial Investment</div>
-        <div id="metricInitialInvestment" class="metric-value">฿0</div>
-      </div>
-      <div class="card metric-card">
-        <div class="metric-label">Monthly Savings</div>
-        <div id="metricMonthlySavings" class="metric-value">฿0</div>
-      </div>
-      <div class="card metric-card">
-        <div class="metric-label">Payroll Saved</div>
-        <div id="metricPayrollSaved" class="metric-value">฿0</div>
-      </div>
-      <div class="card metric-card">
-        <div class="metric-label">Year 1 Net Savings</div>
-        <div id="metricYear1Savings" class="metric-value">฿0</div>
-      </div>
-      <div class="card metric-card">
-        <div class="metric-label">Break-Even Month</div>
-        <div id="metricBreakEven" class="metric-value">-</div>
-      </div>
-    </div>
+    <!-- Two-Panel Layout -->
+    <div class="layout-grid">
 
-    <!-- Global Parameters -->
-    <div class="card p-6 mb-6">
-      <h2 class="text-xl font-semibold text-slate-900 mb-4">Global Parameters</h2>
-      <div class="grid grid-cols-5 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Total Monthly Volume</label>
-          <input type="number" id="totalVolume" placeholder="10000" min="0" step="100">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Avg Human Handle Time (Minutes)</label>
-          <input type="number" id="humanTime" placeholder="6" min="0" step="0.1">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Avg AI Handle Time (Minutes)</label>
-          <input type="number" id="aiTime" placeholder="3.5" min="0" step="0.1">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Total Current Agents</label>
-          <input type="number" id="totalAgents" placeholder="100" min="0" step="1">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Avg Monthly Salary per Agent</label>
-          <input type="number" id="monthlySalary" placeholder="25000" min="0" step="1000">
-        </div>
-      </div>
-    </div>
+      <!-- ===== LEFT: INPUT PANEL ===== -->
+      <div class="input-panel">
 
-    <!-- Operation Efficiency Offset -->
-    <div class="card p-6 mb-6">
-      <h2 class="text-xl font-semibold text-slate-900 mb-4">Operation Efficiency Offset</h2>
-
-      <!-- Deflection Rate -->
-      <div class="mb-6">
-        <div class="flex justify-between items-center mb-2">
-          <label class="text-sm font-medium text-slate-700">AI Deflection Rate</label>
-          <span id="deflectionValue" class="text-2xl font-bold text-blue-600">20%</span>
-        </div>
-        <input type="range" id="deflectionRate" class="slider" min="0" max="80" value="20" step="1">
-        <div class="grid grid-cols-3 gap-4 mt-4">
-          <div class="text-center p-3 bg-slate-50 rounded-lg">
-            <div class="text-xs text-slate-600 mb-1">Agents Replaced</div>
-            <div id="agentsReplaced" class="text-lg font-semibold text-slate-900">0 of 0</div>
+        <!-- Section 1: Client Operations -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 data-i18n="section.clientOps">Client Operations</h2>
+              <p class="card-description" data-i18n="section.clientOpsDesc">Describe the client's current operation</p>
+            </div>
           </div>
-          <div class="text-center p-3 bg-slate-50 rounded-lg">
-            <div class="text-xs text-slate-600 mb-1">Traffic Routed to AI</div>
-            <div id="trafficToAI" class="text-lg font-semibold text-slate-900">0%</div>
+
+          <div class="grid-2" style="margin-bottom: 20px;">
+            <div class="field-group">
+              <label class="field-label">
+                <span data-i18n="field.totalAgents">Total Current Agents</span>
+                <span class="field-description" data-i18n="field.totalAgentsDesc">Number of human agents handling customer interactions</span>
+              </label>
+              <input type="number" id="totalAgents" value="100" min="0" step="1">
+            </div>
+            <div class="field-group">
+              <label class="field-label">
+                <span data-i18n="field.monthlySalary">Avg Monthly Salary per Agent</span>
+                <span class="field-description" data-i18n="field.monthlySalaryDesc">Including benefits and overhead per agent</span>
+              </label>
+              <input type="number" id="monthlySalary" value="25000" min="0" step="1000">
+            </div>
           </div>
-          <div class="text-center p-3 bg-slate-50 rounded-lg">
-            <div class="text-xs text-slate-600 mb-1">Payroll Saved</div>
-            <div id="payrollDisplay" class="text-lg font-semibold text-green-600">฿0/mo</div>
+
+          <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 12px;" data-i18n="section.channels">Channels</h3>
+          <div id="channelsContainer">
+            <!-- Rendered by ui.js -->
+          </div>
+          <button id="addChannelBtn" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="btn.addChannel">Add Channel</span>
+          </button>
+        </div>
+
+        <!-- Section 2: Rates Comparison -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 data-i18n="section.rates">Rates Comparison</h2>
+              <p class="card-description" data-i18n="section.ratesDesc">Compare per-interaction costs. AI Bot Rate applies to deflected interactions, AI Agent Rate to human-assisted ones.</p>
+            </div>
+          </div>
+          <div id="ratesContainer">
+            <!-- Rendered by ui.js -->
           </div>
         </div>
-      </div>
 
-      <!-- Admin Hours Saved -->
-      <div class="grid grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Admin Hours Saved/Month</label>
-          <input type="number" id="adminHours" placeholder="160" min="0" step="10">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Hourly Rate</label>
-          <input type="number" id="hourlyRate" placeholder="150" min="0" step="10">
-        </div>
-        <div class="flex items-end">
-          <div class="text-center p-3 bg-teal-50 rounded-lg w-full">
-            <div class="text-xs text-teal-700 mb-1">Admin Value Reclaimed</div>
-            <div id="adminValueDisplay" class="text-lg font-semibold text-teal-600">฿0/mo</div>
+        <!-- Section 3: Additional Costs -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 data-i18n="section.additionalCosts">Additional Costs</h2>
+              <p class="card-description" data-i18n="section.additionalCostsDesc">Add any other operating costs not covered above</p>
+            </div>
+          </div>
+          <div class="cost-columns">
+            <div class="cost-column">
+              <h3 data-i18n="section.clientState">Client Current State</h3>
+              <div id="clientItems">
+                <!-- Rendered by ui.js -->
+              </div>
+              <button class="btn btn-primary btn-sm" data-action="add-item" data-side="client">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span data-i18n="btn.addCostItem">Add Cost Item</span>
+              </button>
+            </div>
+            <div class="cost-column">
+              <h3 data-i18n="section.aiSolution">AI Rudder Solution</h3>
+              <div id="aiItems">
+                <!-- Rendered by ui.js -->
+              </div>
+              <button class="btn btn-primary btn-sm" data-action="add-item" data-side="ai">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span data-i18n="btn.addCostItem">Add Cost Item</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        <!-- Section 4: Efficiency Offset -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 data-i18n="section.efficiency">Efficiency Offset</h2>
+              <p class="card-description" data-i18n="section.efficiencyDesc">Estimate how much AI automation reduces operational load</p>
+            </div>
+          </div>
+
+          <!-- Deflection Rate -->
+          <div style="margin-bottom: 20px;">
+            <div class="slider-container">
+              <label class="field-label" style="margin-bottom: 0;">
+                <span data-i18n="field.deflectionRate">AI Deflection Rate</span>
+                <span class="field-description" data-i18n="field.deflectionRateDesc">Percentage of interactions fully handled by AI without human intervention</span>
+              </label>
+              <span id="deflectionValue" class="deflection-value">20%</span>
+            </div>
+            <input type="range" id="deflectionRate" class="slider" min="0" max="80" value="20" step="1">
+          </div>
+
+          <!-- Admin Hours -->
+          <div class="grid-2" style="margin-bottom: 16px;">
+            <div class="field-group">
+              <label class="field-label">
+                <span data-i18n="field.adminHours">Admin Hours Saved/Month</span>
+                <span class="field-description" data-i18n="field.adminHoursDesc">Hours of supervisory/admin work eliminated by AI automation</span>
+              </label>
+              <input type="number" id="adminHours" value="160" min="0" step="10">
+            </div>
+            <div class="field-group">
+              <label class="field-label">
+                <span data-i18n="field.hourlyRate">Hourly Rate</span>
+                <span class="field-description" data-i18n="field.hourlyRateDesc">Cost per hour for admin/supervisory time</span>
+              </label>
+              <input type="number" id="hourlyRate" value="150" min="0" step="10">
+            </div>
+          </div>
+
+          <!-- Derived Metrics -->
+          <div class="derived-metrics">
+            <div class="derived-metric">
+              <div class="label" data-i18n="derived.agentsReplaced">Agents Replaced</div>
+              <div id="agentsReplaced" class="value">0 of 0</div>
+            </div>
+            <div class="derived-metric">
+              <div class="label" data-i18n="derived.trafficToAI">Traffic Routed to AI</div>
+              <div id="trafficToAI" class="value">0%</div>
+            </div>
+            <div class="derived-metric green">
+              <div class="label" data-i18n="derived.payrollSaved">Payroll Saved</div>
+              <div id="payrollDisplay" class="value">฿0/mo</div>
+            </div>
+            <div class="derived-metric teal">
+              <div class="label" data-i18n="derived.adminValue">Admin Value Reclaimed</div>
+              <div id="adminValueDisplay" class="value">฿0/mo</div>
+            </div>
+          </div>
+        </div>
+
       </div>
-    </div>
 
-    <!-- Two-Column Cost Comparison -->
-    <div class="grid grid-cols-2 gap-6 mb-6">
+      <!-- ===== RIGHT: OUTPUT PANEL (sticky) ===== -->
+      <div class="output-panel">
 
-      <!-- Client Current State -->
-      <div class="card p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold text-slate-900">Client Current State</h2>
-          <button id="addClientItem" class="btn-primary text-sm py-2 px-4">
-            <i data-feather="plus" class="w-4 h-4 inline"></i> Add Cost Item
-          </button>
+        <!-- Dashboard Metrics -->
+        <div class="card">
+          <h2 style="margin-bottom: 16px;" data-i18n="section.dashboard">Dashboard</h2>
+          <div class="dashboard-grid">
+            <!-- Row 1: Total spend comparison -->
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.currentMonthly">Current Monthly Spend</div>
+              <div id="metricClientMonthly" class="metric-value" style="color: var(--client-legacy);">฿0</div>
+              <div class="metric-hint" data-i18n="metric.currentMonthlyHint">Channel costs + agent payroll + additional costs</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.aiMonthly">AI Rudder Monthly Spend</div>
+              <div id="metricAIMonthly" class="metric-value blue">฿0</div>
+              <div class="metric-hint" data-i18n="metric.aiMonthlyHint">Channel costs + retained payroll + additional costs</div>
+            </div>
+            <!-- Row 2: The savings -->
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.monthlySavings">Monthly Savings</div>
+              <div id="metricMonthlySavings" class="metric-value savings">฿0</div>
+              <div class="metric-hint" data-i18n="metric.monthlySavingsHint">Total reduction including admin efficiency</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.costReduction">Cost Reduction</div>
+              <div id="metricCostReduction" class="metric-value savings">0%</div>
+              <div class="metric-hint" data-i18n="metric.costReductionHint">Percentage of current spend saved monthly</div>
+            </div>
+            <!-- Row 3: Investment & timeline -->
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.initialInvestment">Initial Investment</div>
+              <div id="metricInitialInvestment" class="metric-value">฿0</div>
+              <div class="metric-hint" data-i18n="metric.initialInvestmentHint">One-time setup costs</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.breakEven">Break-Even</div>
+              <div id="metricBreakEven" class="metric-value blue">-</div>
+              <div class="metric-hint" data-i18n="metric.breakEvenHint">When cumulative savings exceed investment</div>
+            </div>
+            <!-- Row 4: Bottom line -->
+            <div class="metric-card full-width">
+              <div class="metric-label" data-i18n="metric.year1Savings">Year 1 Net Savings</div>
+              <div id="metricYear1Savings" class="metric-value savings">฿0</div>
+              <div class="metric-hint" data-i18n="metric.year1SavingsHint">12 months of savings minus initial investment</div>
+            </div>
+          </div>
         </div>
-        <div id="clientItems" class="space-y-3">
-          <!-- Dynamic items will be added here -->
+
+        <!-- ROI Chart -->
+        <div class="card">
+          <h2 style="margin-bottom: 8px;" data-i18n="section.chartTitle">24-Month Cost Comparison</h2>
+          <p class="chart-description" data-i18n="section.chartDesc">Cumulative total costs over 24 months including channel costs, agent payroll, and additional costs. The green shaded area between the lines represents your savings with AI Rudder. Admin efficiency gains are additional savings reflected in the dashboard above.</p>
+          <div class="chart-container">
+            <canvas id="roiChart"></canvas>
+          </div>
         </div>
+
       </div>
 
-      <!-- AI Rudder Solution -->
-      <div class="card p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold text-slate-900">AI Rudder Solution</h2>
-          <button id="addAIItem" class="btn-primary text-sm py-2 px-4">
-            <i data-feather="plus" class="w-4 h-4 inline"></i> Add Cost Item
-          </button>
-        </div>
-        <div id="aiItems" class="space-y-3">
-          <!-- Dynamic items will be added here -->
-        </div>
-      </div>
-
     </div>
-
-    <!-- ROI Chart -->
-    <div class="card p-6">
-      <h2 class="text-xl font-semibold text-slate-900 mb-4">24-Month ROI Timeline</h2>
-      <canvas id="roiChart" style="max-height: 400px;"></canvas>
-    </div>
-
   </div>
 
-  <!-- Load all JavaScript files in order -->
-  <script src="js/calculator.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/ui.js"></script>
-  <script>
-    // Initialize Feather icons after all scripts load
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.feather) {
-        feather.replace();
-      }
-    });
-  </script>
+  <!-- Modal Overlay -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <p id="modalMessage"></p>
+      <input type="text" id="modalInput" style="display:none;" placeholder="">
+      <div class="modal-actions">
+        <button id="modalCancel" class="btn btn-secondary" data-i18n="btn.cancel">Cancel</button>
+        <button id="modalConfirm" class="btn btn-primary" data-i18n="btn.confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Single Module Entry Point -->
+  <script type="module" src="js/app.js"></script>
 
 </body>
 </html>

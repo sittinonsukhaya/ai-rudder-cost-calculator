@@ -1,0 +1,2875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Rudder Cost Calculator — User Guide</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ===== Guide-specific styles ===== */
+
+    /* Layout with TOC sidebar */
+    .guide-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .guide-toc {
+      position: sticky;
+      top: 24px;
+      width: 240px;
+      min-width: 240px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px -10px rgba(2, 8, 23, 0.10);
+      border: 1px solid var(--border-gray);
+      padding: 16px 0;
+    }
+
+    .guide-toc .toc-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted-text);
+      padding: 0 16px 10px;
+      border-bottom: 1px solid var(--border-gray);
+      margin-bottom: 6px;
+    }
+
+    .guide-toc a {
+      display: block;
+      padding: 7px 16px;
+      font-size: 13px;
+      color: var(--muted-text);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      line-height: 1.4;
+    }
+
+    .guide-toc a:hover {
+      color: var(--dark-navy);
+      background: var(--light-slate);
+    }
+
+    .guide-toc a.active {
+      color: var(--brand-blue);
+      border-left-color: var(--brand-blue);
+      background: #eff6ff;
+      font-weight: 500;
+    }
+
+    .guide-toc a.toc-sub {
+      padding-left: 28px;
+      font-size: 12px;
+    }
+
+    .guide-container {
+      flex: 1;
+      min-width: 0;
+      max-width: 900px;
+    }
+
+    .guide-header {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+    }
+
+    .guide-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .guide-nav .back-link {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .guide-nav .back-link:hover {
+      color: white;
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .lang-toggle button {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-family: inherit;
+    }
+
+    .lang-toggle button.active {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
+    .lang-toggle button:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .guide-section {
+      margin-bottom: 24px;
+    }
+
+    .guide-section .card h2 {
+      margin-bottom: 12px;
+    }
+
+    .guide-section .card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dark-navy);
+      margin: 16px 0 8px;
+    }
+
+    .guide-section .card p,
+    .guide-section .card li {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--slate-900);
+    }
+
+    .guide-section .card ul,
+    .guide-section .card ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .guide-section .card li {
+      margin-bottom: 4px;
+    }
+
+    /* Thai translation blocks */
+    .thai-block {
+      background: #fefce8;
+      border-left: 4px solid #facc15;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-top: 16px;
+    }
+
+    .thai-block::before {
+      content: "🇹🇭 ภาษาไทย";
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #a16207;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .thai-block p,
+    .thai-block li {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #422006;
+    }
+
+    .thai-block ul,
+    .thai-block ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .thai-block li {
+      margin-bottom: 4px;
+    }
+
+    .thai-block h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #854d0e;
+      margin: 12px 0 6px;
+    }
+
+    /* Scenario comparison table */
+    .scenario-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .scenario-table th {
+      background: var(--dark-navy);
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .scenario-table th:first-child { border-radius: 8px 0 0 0; }
+    .scenario-table th:last-child { border-radius: 0 8px 0 0; }
+
+    .scenario-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-gray);
+      vertical-align: top;
+    }
+
+    .scenario-table tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+    .scenario-table tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+
+    .scenario-table tr:nth-child(even) td {
+      background: var(--light-slate);
+    }
+
+    .scenario-table .scenario-label {
+      font-weight: 600;
+      color: var(--dark-navy);
+      white-space: nowrap;
+    }
+
+    /* Scenario quick-ref cards */
+    .scenario-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .scenario-card {
+      border-radius: 10px;
+      padding: 20px;
+      border: 2px solid;
+    }
+
+    .scenario-card.card-a {
+      background: #eff6ff;
+      border-color: var(--brand-blue);
+    }
+
+    .scenario-card.card-b {
+      background: #f0fdf4;
+      border-color: var(--savings-green);
+    }
+
+    .scenario-card.card-c {
+      background: #f5f3ff;
+      border-color: #7c3aed;
+    }
+
+    .scenario-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .scenario-card.card-a h4 { color: var(--brand-blue); }
+    .scenario-card.card-b h4 { color: var(--savings-green); }
+    .scenario-card.card-c h4 { color: #7c3aed; }
+
+    .scenario-card p,
+    .scenario-card li {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .scenario-card ul {
+      padding-left: 16px;
+      margin: 6px 0;
+    }
+
+    .scenario-card .tag-fill {
+      display: inline-block;
+      background: var(--brand-blue);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .scenario-card .tag-skip {
+      display: inline-block;
+      background: #e2e8f0;
+      color: var(--muted-text);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .scenario-card.card-b .tag-fill { background: var(--savings-green); }
+    .scenario-card.card-c .tag-fill { background: #7c3aed; }
+
+    /* Step walkthrough */
+    .step-block {
+      background: var(--light-slate);
+      border: 1px solid var(--border-gray);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 12px 0;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--brand-blue);
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 50%;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dark-navy);
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .step-block .field-example {
+      display: inline-block;
+      background: white;
+      border: 1px solid var(--border-gray);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+      font-size: 13px;
+      color: var(--dark-navy);
+      margin: 2px 4px;
+    }
+
+    .step-block table {
+      width: 100%;
+      font-size: 13px;
+      border-collapse: collapse;
+      margin: 8px 0;
+    }
+
+    .step-block table th {
+      text-align: left;
+      font-weight: 500;
+      color: var(--muted-text);
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-gray);
+      font-size: 12px;
+    }
+
+    .step-block table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .step-block .arrow {
+      color: var(--brand-blue);
+      font-weight: 600;
+    }
+
+    /* Tip cards */
+    .tip-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .tip-list li {
+      padding: 12px 16px;
+      background: var(--light-slate);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--teal-accent);
+      font-size: 14px;
+    }
+
+    .tip-list li strong {
+      color: var(--dark-navy);
+    }
+
+    /* FAQ */
+    .faq-item {
+      border-bottom: 1px solid var(--border-gray);
+      padding: 14px 0;
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-q {
+      font-weight: 600;
+      color: var(--dark-navy);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .faq-a {
+      font-size: 14px;
+      color: var(--muted-text);
+      line-height: 1.6;
+    }
+
+    /* Estimation formula boxes */
+    .formula-box {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 12px 0;
+    }
+
+    .formula-box .formula {
+      font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--dark-navy);
+      margin: 8px 0;
+      padding: 10px 14px;
+      background: white;
+      border-radius: 6px;
+      border: 1px dashed #a5b4fc;
+    }
+
+    .formula-box .formula-example {
+      font-size: 13px;
+      color: var(--muted-text);
+      margin-top: 6px;
+    }
+
+    .formula-box .formula-example strong {
+      color: var(--savings-green);
+    }
+
+    .benchmark-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .benchmark-table th {
+      background: var(--light-slate);
+      color: var(--dark-navy);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      border-bottom: 2px solid var(--border-gray);
+    }
+
+    .benchmark-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-gray);
+      vertical-align: top;
+    }
+
+    .benchmark-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .benchmark-table .highlight-row td {
+      background: #f0fdf4;
+      font-weight: 500;
+    }
+
+    .benchmark-source {
+      font-size: 11px;
+      color: var(--muted-text);
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    .estimation-subsection {
+      border-top: 1px solid var(--border-gray);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .estimation-subsection:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .admin-category {
+      background: var(--light-slate);
+      border: 1px solid var(--border-gray);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 8px 0;
+    }
+
+    .admin-category strong {
+      color: var(--dark-navy);
+    }
+
+    .admin-total {
+      background: #f0fdf4;
+      border: 2px solid var(--savings-green);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      text-align: center;
+    }
+
+    .admin-total .total-label {
+      font-size: 13px;
+      color: var(--muted-text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .admin-total .total-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--savings-green);
+      margin: 4px 0;
+    }
+
+    .admin-total .total-note {
+      font-size: 12px;
+      color: var(--muted-text);
+    }
+
+    /* Industry impact cards */
+    .industry-card {
+      border: 1px solid var(--border-gray);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 16px 0;
+      border-left: 4px solid;
+    }
+
+    .industry-card.ic-collections { border-left-color: #dc2626; }
+    .industry-card.ic-logistics { border-left-color: #ea580c; }
+    .industry-card.ic-telemarketing { border-left-color: #2563eb; }
+    .industry-card.ic-kyc { border-left-color: #7c3aed; }
+    .industry-card.ic-appointments { border-left-color: #0891b2; }
+    .industry-card.ic-insurance { border-left-color: #4f46e5; }
+    .industry-card.ic-surveys { border-left-color: #0d9488; }
+    .industry-card.ic-fraud { border-left-color: #b91c1c; }
+
+    .industry-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dark-navy);
+      margin-bottom: 8px;
+    }
+
+    .industry-card .pain-point {
+      background: #fef2f2;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-size: 13px;
+      color: #991b1b;
+    }
+
+    .industry-card .napkin-math {
+      background: #f0fdf4;
+      border: 1px dashed var(--savings-green);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 10px 0;
+    }
+
+    .industry-card .napkin-math .nm-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--savings-green);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .industry-card .napkin-math p {
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .industry-card .napkin-math strong {
+      color: var(--savings-green);
+    }
+
+    .talk-track {
+      background: #eff6ff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 10px 0;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--dark-navy);
+      border-left: 3px solid var(--brand-blue);
+    }
+
+    .talk-track::before {
+      content: "TALK TRACK";
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--brand-blue);
+      font-style: normal;
+      margin-bottom: 6px;
+    }
+
+    .cost-up-box {
+      background: #fff7ed;
+      border: 2px solid #fb923c;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .cost-up-box h4 {
+      color: #c2410c;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .guide-toc {
+        display: none;
+      }
+
+      .guide-layout {
+        max-width: 900px;
+      }
+
+      .guide-header {
+        max-width: 900px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .scenario-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .scenario-table {
+        font-size: 12px;
+      }
+
+      .scenario-table th,
+      .scenario-table td {
+        padding: 8px 6px;
+      }
+
+      .guide-nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    /* ===== Print ===== */
+    @media print {
+      .lang-toggle,
+      .guide-nav .back-link,
+      .guide-toc {
+        display: none;
+      }
+
+      .guide-layout {
+        display: block;
+      }
+
+      .guide-section .card {
+        break-inside: avoid;
+      }
+
+      .thai-block {
+        background: #fffdf5;
+      }
+
+      .scenario-cards {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    /* ===== Language visibility ===== */
+    body.lang-en .thai-block { display: none; }
+    body.lang-th .en-block { display: none; }
+
+    /* Thai headings for TH mode */
+    .th-heading { display: none; }
+    body.lang-th .en-heading { display: none; }
+    body.lang-th .th-heading { display: block; }
+
+    /* Thai talk-track label */
+    body.lang-th .talk-track::before { content: "สคริปต์พูด"; }
+
+    /* Inline text language toggle (for TOC, step titles, etc.) */
+    .th-text { display: none; }
+    body.lang-th .en-text { display: none; }
+    body.lang-th .th-text { display: inline; }
+
+    /* h4 heading toggle (industry cards, cost-up-box) */
+    h4.th-heading { display: none; }
+    body.lang-th h4.en-heading { display: none; }
+    body.lang-th h4.th-heading { display: block; }
+
+    /* h3 heading toggle for elements outside cards */
+    h3.th-heading { display: none; }
+    body.lang-th h3.en-heading { display: none; }
+    body.lang-th h3.th-heading { display: block; }
+  </style>
+</head>
+<body class="lang-en">
+
+  <!-- ===== HEADER ===== -->
+  <div class="card header guide-header">
+    <div class="header-brand">
+      <img src="https://airudder.com/wp-content/themes/airudder-theme/assets/images/logo-footer.webp" alt="AI Rudder" class="header-logo">
+      <div class="header-divider"></div>
+      <div>
+        <h1><span class="en-text">Cost Calculator — User Guide</span><span class="th-text">เครื่องคิดเลขต้นทุน — คู่มือการใช้งาน</span></h1>
+        <p class="header-subtitle"><span class="en-text">How to use the calculator for every sales scenario</span><span class="th-text">วิธีใช้เครื่องคิดเลขสำหรับทุกสถานการณ์การขาย</span></p>
+      </div>
+    </div>
+    <div class="guide-nav">
+      <a href="index.html" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span class="en-text">Back to Calculator</span><span class="th-text">กลับไปเครื่องคิดเลข</span>
+      </a>
+      <div class="lang-toggle">
+        <button id="langEn" class="active" onclick="setLang('en')">EN</button>
+        <button id="langTh" onclick="setLang('th')">TH</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-layout">
+
+    <!-- ===== TABLE OF CONTENTS ===== -->
+    <nav class="guide-toc" id="guideToc">
+      <div class="toc-title"><span class="en-text">Table of Contents</span><span class="th-text">สารบัญ</span></div>
+      <a href="#overview"><span class="en-text">1. What This Tool Does</span><span class="th-text">1. เครื่องมือนี้ทำอะไร</span></a>
+      <a href="#scenarios"><span class="en-text">2. Three Scenarios</span><span class="th-text">2. สามสถานการณ์</span></a>
+      <a href="#estimation"><span class="en-text">3. Estimation Guide</span><span class="th-text">3. คู่มือประมาณค่า</span></a>
+      <a href="#est-volume" class="toc-sub"><span class="en-text">3a. Volume</span><span class="th-text">3a. ปริมาณสาย</span></a>
+      <a href="#est-aht" class="toc-sub"><span class="en-text">3b. Avg Handle Time</span><span class="th-text">3b. เวลาจัดการเฉลี่ย</span></a>
+      <a href="#est-ai-ht" class="toc-sub"><span class="en-text">3c. AI Handle Time</span><span class="th-text">3c. เวลาจัดการของ AI</span></a>
+      <a href="#est-deflection" class="toc-sub"><span class="en-text">3d. Deflection Rate</span><span class="th-text">3d. อัตรา Deflection</span></a>
+      <a href="#est-admin" class="toc-sub"><span class="en-text">3e. Admin Hours Saved</span><span class="th-text">3e. ชั่วโมง Admin ที่ประหยัด</span></a>
+      <a href="#est-addcosts" class="toc-sub"><span class="en-text">3f. Additional Costs</span><span class="th-text">3f. ค่าใช้จ่ายเพิ่มเติม</span></a>
+      <a href="#walkthrough"><span class="en-text">4. Step-by-Step</span><span class="th-text">4. ทีละขั้นตอน</span></a>
+      <a href="#quickref"><span class="en-text">5. Quick Reference</span><span class="th-text">5. อ้างอิงด่วน</span></a>
+      <a href="#tips"><span class="en-text">6. Meeting Tips</span><span class="th-text">6. เคล็ดลับประชุม</span></a>
+      <a href="#impact"><span class="en-text">7. Business Impact</span><span class="th-text">7. ผลกระทบธุรกิจ</span></a>
+      <a href="#impact-collections" class="toc-sub"><span class="en-text">Collections</span><span class="th-text">เก็บหนี้</span></a>
+      <a href="#impact-logistics" class="toc-sub"><span class="en-text">Logistics / COD</span><span class="th-text">ขนส่ง / COD</span></a>
+      <a href="#impact-telemarketing" class="toc-sub"><span class="en-text">Telemarketing</span><span class="th-text">การตลาดโทรศัพท์</span></a>
+      <a href="#impact-kyc" class="toc-sub"><span class="en-text">KYC</span><span class="th-text">KYC</span></a>
+      <a href="#impact-appointments" class="toc-sub"><span class="en-text">Appointments</span><span class="th-text">นัดหมาย</span></a>
+      <a href="#impact-insurance" class="toc-sub"><span class="en-text">Insurance</span><span class="th-text">ประกัน</span></a>
+      <a href="#impact-surveys" class="toc-sub"><span class="en-text">Surveys</span><span class="th-text">แบบสำรวจ</span></a>
+      <a href="#impact-fraud" class="toc-sub"><span class="en-text">Fraud Alerts</span><span class="th-text">แจ้งเตือนทุจริต</span></a>
+      <a href="#faq"><span class="en-text">8. FAQ</span><span class="th-text">8. คำถามที่พบบ่อย</span></a>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="guide-container">
+
+    <!-- ===== SECTION 1: OVERVIEW ===== -->
+    <div class="guide-section" id="overview">
+      <div class="card">
+        <h2 class="en-heading">1. What This Tool Does</h2>
+        <h2 class="th-heading">1. เครื่องมือนี้ทำอะไร</h2>
+
+        <div class="en-block">
+          <p>The <strong>AI Rudder Cost Calculator</strong> is a side-by-side cost comparison tool. You enter the client's current spending (agents, call rates, extra costs), then enter AI Rudder's pricing. The calculator instantly shows <strong>how much the client saves each month</strong> and plots a 24-month chart so you can see the gap growing over time.</p>
+
+          <h3>Who should use it?</h3>
+          <p>Sales team members — use it during client meetings or when preparing proposals. It turns numbers into a clear visual story.</p>
+
+          <h3>What does it show?</h3>
+          <ul>
+            <li><strong>Monthly cost comparison</strong> — client's current spend vs. AI Rudder solution</li>
+            <li><strong>Monthly savings</strong> — the difference, including payroll and admin efficiency</li>
+            <li><strong>Break-even point</strong> — when the client recoups any setup costs</li>
+            <li><strong>Year 1 net savings</strong> — the bottom line after 12 months</li>
+            <li><strong>24-month chart</strong> — visual proof that savings grow over time</li>
+          </ul>
+        </div>
+
+        <div class="thai-block">
+          <p><strong>AI Rudder Cost Calculator</strong> เป็นเครื่องมือเปรียบเทียบต้นทุนแบบเคียงข้างกัน คุณกรอกค่าใช้จ่ายปัจจุบันของลูกค้า (จำนวนเอเจนต์, อัตราค่าโทร, ค่าใช้จ่ายเพิ่มเติม) แล้วกรอกราคาของ AI Rudder ระบบจะคำนวณทันทีว่า<strong>ลูกค้าประหยัดได้เท่าไหร่ต่อเดือน</strong> และแสดงกราฟ 24 เดือนให้เห็นว่าส่วนต่างเพิ่มขึ้นเรื่อยๆ</p>
+
+          <h3>ใครควรใช้?</h3>
+          <p>ทีมขาย — ใช้ระหว่างการประชุมกับลูกค้า หรือตอนเตรียม proposal เครื่องมือนี้เปลี่ยนตัวเลขให้เป็นเรื่องราวที่เข้าใจง่าย</p>
+
+          <h3>แสดงอะไรบ้าง?</h3>
+          <ul>
+            <li><strong>เปรียบเทียบค่าใช้จ่ายรายเดือน</strong> — ค่าใช้จ่ายปัจจุบัน vs. AI Rudder</li>
+            <li><strong>ประหยัดรายเดือน</strong> — ส่วนต่าง รวมเงินเดือนและประสิทธิภาพ admin</li>
+            <li><strong>จุดคุ้มทุน</strong> — เมื่อไหร่ที่ลูกค้าจะได้คืนค่า setup</li>
+            <li><strong>ประหยัดสุทธิปีที่ 1</strong> — ยอดสุทธิหลังจาก 12 เดือน</li>
+            <li><strong>กราฟ 24 เดือน</strong> — แสดงให้เห็นว่าประหยัดมากขึ้นตามเวลา</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 2: THREE SCENARIOS ===== -->
+    <div class="guide-section" id="scenarios">
+      <div class="card">
+        <h2 class="en-heading">2. Understanding the Three Scenarios</h2>
+        <h2 class="th-heading">2. ทำความเข้าใจ 3 สถานการณ์</h2>
+
+        <div class="en-block">
+          <p>The calculator works for three different sales situations. Pick the one that matches your client:</p>
+
+          <table class="scenario-table">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>When to Use</th>
+                <th>Deflection</th>
+                <th>Bot Rate</th>
+                <th>Agent Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="scenario-label">A: Cloud Contact Center</td>
+                <td>Client wants to switch their phone system to AI Rudder's cloud platform (no bot)</td>
+                <td>0%</td>
+                <td>Leave blank</td>
+                <td>Fill in</td>
+              </tr>
+              <tr>
+                <td class="scenario-label">B: AI Bot Only</td>
+                <td>Client wants to automate part of their calls with AI bot</td>
+                <td>10–80%</td>
+                <td>Fill in</td>
+                <td>Leave blank</td>
+              </tr>
+              <tr>
+                <td class="scenario-label">C: Hybrid (Bot + CC)</td>
+                <td>Client wants both bot automation AND cloud contact center</td>
+                <td>10–80%</td>
+                <td>Fill in</td>
+                <td>Fill in</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="thai-block">
+          <p>เครื่องคิดเลขนี้ใช้ได้กับ 3 สถานการณ์การขาย เลือกแบบที่ตรงกับลูกค้าของคุณ:</p>
+
+          <table class="scenario-table">
+            <thead>
+              <tr>
+                <th>สถานการณ์</th>
+                <th>ใช้เมื่อไหร่</th>
+                <th>Deflection</th>
+                <th>Bot Rate</th>
+                <th>Agent Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="scenario-label">A: Cloud Contact Center</td>
+                <td>ลูกค้าต้องการย้ายระบบโทรศัพท์มาใช้ cloud platform ของ AI Rudder (ไม่มีบอท)</td>
+                <td>0%</td>
+                <td>เว้นว่าง</td>
+                <td>กรอก</td>
+              </tr>
+              <tr>
+                <td class="scenario-label">B: AI Bot Only</td>
+                <td>ลูกค้าต้องการให้ AI bot รับสายบางส่วนแทนคน</td>
+                <td>10–80%</td>
+                <td>กรอก</td>
+                <td>เว้นว่าง</td>
+              </tr>
+              <tr>
+                <td class="scenario-label">C: Hybrid (Bot + CC)</td>
+                <td>ลูกค้าต้องการทั้งบอทอัตโนมัติและ cloud contact center</td>
+                <td>10–80%</td>
+                <td>กรอก</td>
+                <td>กรอก</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 3: ESTIMATION GUIDE ===== -->
+    <div class="guide-section" id="estimation">
+      <div class="card">
+        <h2 class="en-heading">3. Estimation Guide — How to Calculate Inputs You Don't Have</h2>
+        <h2 class="th-heading">3. คู่มือการประมาณค่า — วิธีคำนวณข้อมูลที่ไม่มี</h2>
+
+        <div class="en-block">
+          <p>Some fields need numbers that the client may not know off the top of their head. Here's how to estimate each one before you start filling in the calculator.</p>
+        </div>
+        <div class="thai-block">
+          <p>บางช่องต้องใช้ตัวเลขที่ลูกค้าอาจไม่รู้ทันที นี่คือวิธีประมาณการแต่ละค่าก่อนกรอกเครื่องคิดเลข</p>
+        </div>
+
+        <!-- 3A: Volume -->
+        <div class="estimation-subsection" id="est-volume">
+          <h3 class="en-heading">3a. Volume (Monthly Calls)</h3>
+          <h3 class="th-heading">3a. ปริมาณสาย (รายเดือน)</h3>
+
+          <div class="en-block">
+            <p><strong>If the client has system data</strong> — ask for their ACD/IVR report or phone bill. The total calls per month is the number you need.</p>
+            <p style="margin-top: 8px;"><strong>If no system data is available</strong> — use this formula:</p>
+
+            <div class="formula-box">
+              <div class="formula">Volume = Calls per agent per day &times; Working days per month &times; Number of agents</div>
+              <div class="formula-example">Example: <span class="field-example">50</span> calls/day &times; <span class="field-example">22</span> days &times; <span class="field-example">100</span> agents = <strong>110,000 calls/month</strong></div>
+            </div>
+
+            <p>To estimate <em>calls per agent per day</em>, ask the client: "How many calls does one agent typically handle in a day?" If they don't know, use these industry benchmarks:</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>Type of Work</th>
+                <th>Calls/Agent/Day</th>
+                <th>Notes</th>
+              </tr>
+              <tr>
+                <td>Inbound customer service</td>
+                <td>25–50</td>
+                <td>Depends on call complexity; simple queries = higher end</td>
+              </tr>
+              <tr>
+                <td>Outbound sales (consultative/B2B)</td>
+                <td>40–80</td>
+                <td>Longer conversations, discovery calls</td>
+              </tr>
+              <tr>
+                <td>Outbound cold calling (manual dial)</td>
+                <td>80–150</td>
+                <td>Short calls, high rejection rate</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Outbound with predictive dialer</td>
+                <td>150–250+</td>
+                <td>Dialer eliminates wait time between calls</td>
+              </tr>
+            </table>
+            <p class="benchmark-source">Sources: LiveAgent 2025, Call Centre Helper, Sprinklr 2025</p>
+
+            <p style="margin-top: 12px;"><strong>Quick tip:</strong> For most Thai contact centers doing outbound with manual dialing, <strong>50–80 calls/agent/day</strong> is a safe starting point. With a predictive dialer, double or triple that number.</p>
+          </div>
+
+          <div class="thai-block">
+            <p><strong>ถ้าลูกค้ามีข้อมูลจากระบบ</strong> — ขอรายงาน ACD/IVR หรือบิลค่าโทร จำนวนสายต่อเดือนคือตัวเลขที่ต้องการ</p>
+            <p style="margin-top: 8px;"><strong>ถ้าไม่มีข้อมูลจากระบบ</strong> — ใช้สูตรนี้:</p>
+
+            <div class="formula-box">
+              <div class="formula">Volume = สายต่อเอเจนต์ต่อวัน &times; วันทำงานต่อเดือน &times; จำนวนเอเจนต์</div>
+              <div class="formula-example">ตัวอย่าง: <span class="field-example">50</span> สาย/วัน &times; <span class="field-example">22</span> วัน &times; <span class="field-example">100</span> คน = <strong>110,000 สาย/เดือน</strong></div>
+            </div>
+
+            <p>ประมาณ <em>สายต่อเอเจนต์ต่อวัน</em> โดยถามลูกค้า: "เอเจนต์ 1 คนรับ/โทรกี่สายต่อวัน?" ถ้าไม่รู้ ใช้ benchmark อุตสาหกรรม:</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>ประเภทงาน</th>
+                <th>สาย/เอเจนต์/วัน</th>
+                <th>หมายเหตุ</th>
+              </tr>
+              <tr>
+                <td>Inbound บริการลูกค้า</td>
+                <td>25–50</td>
+                <td>ขึ้นกับความซับซ้อน; ง่าย = มาก</td>
+              </tr>
+              <tr>
+                <td>Outbound ขาย (B2B/ปรึกษา)</td>
+                <td>40–80</td>
+                <td>คุยนาน, สายค้นหาข้อมูล</td>
+              </tr>
+              <tr>
+                <td>Outbound โทรเย็น (กดมือ)</td>
+                <td>80–150</td>
+                <td>สายสั้น, อัตราปฏิเสธสูง</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Outbound ใช้ predictive dialer</td>
+                <td>150–250+</td>
+                <td>Dialer ตัดเวลารอระหว่างสาย</td>
+              </tr>
+            </table>
+
+            <p style="margin-top: 12px;"><strong>เคล็ดลับ:</strong> สำหรับ contact center ไทยที่โทรออกแบบ manual <strong>50–80 สาย/เอเจนต์/วัน</strong> เป็นจุดเริ่มต้นที่ปลอดภัย ถ้ามี predictive dialer ให้คูณ 2-3 เท่า</p>
+          </div>
+        </div>
+
+        <!-- 3B: Handle Time -->
+        <div class="estimation-subsection" id="est-aht">
+          <h3 class="en-heading">3b. Avg Handle Time (AHT)</h3>
+          <h3 class="th-heading">3b. เวลาจัดการเฉลี่ย (AHT)</h3>
+
+          <div class="en-block">
+            <p><strong>Best source:</strong> Ask the client for their ACD report — AHT is a standard metric. If they don't track it, use these industry benchmarks:</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>Industry</th>
+                <th>Typical AHT</th>
+                <th>Notes</th>
+              </tr>
+              <tr>
+                <td>Banking / Financial Services</td>
+                <td>4–6 min</td>
+                <td>Transactions, balance checks, loan inquiries</td>
+              </tr>
+              <tr>
+                <td>Telecommunications</td>
+                <td>3–8 min</td>
+                <td>Simple billing = 3 min; troubleshooting = 8+ min</td>
+              </tr>
+              <tr>
+                <td>Insurance</td>
+                <td>5–7 min</td>
+                <td>Policy inquiries, claims processing</td>
+              </tr>
+              <tr>
+                <td>Collections / Debt Recovery</td>
+                <td>4–6 min</td>
+                <td>Balance between efficiency and negotiation</td>
+              </tr>
+              <tr>
+                <td>Healthcare</td>
+                <td>4–7 min</td>
+                <td>Appointments, patient inquiries</td>
+              </tr>
+              <tr>
+                <td>Retail / E-commerce</td>
+                <td>3–6 min</td>
+                <td>Order status = short; returns = longer</td>
+              </tr>
+            </table>
+            <p class="benchmark-source">Industry average: 6 minutes. Sources: Sobot 2025, Zendesk, NoBelBiz 2025</p>
+
+            <p style="margin-top: 10px;"><strong>Remember:</strong> AHT = Talk time + Hold time + After-call work. If the client says "our calls are about 3 minutes" they probably mean talk time only. The real AHT is usually 1.5–2x the talk time. A safe general default is <strong>3–6 minutes</strong>.</p>
+          </div>
+
+          <div class="thai-block">
+            <p><strong>แหล่งข้อมูลดีที่สุด:</strong> ขอรายงาน ACD จากลูกค้า — AHT เป็นตัวชี้วัดมาตรฐาน ถ้าไม่มี ใช้ benchmark:</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>อุตสาหกรรม</th>
+                <th>AHT ทั่วไป</th>
+                <th>หมายเหตุ</th>
+              </tr>
+              <tr>
+                <td>ธนาคาร / การเงิน</td>
+                <td>4–6 นาที</td>
+                <td>ธุรกรรม, เช็คยอด, สอบถามสินเชื่อ</td>
+              </tr>
+              <tr>
+                <td>โทรคมนาคม</td>
+                <td>3–8 นาที</td>
+                <td>ค่าบริการง่ายๆ = 3 นาที; แก้ปัญหาเทคนิค = 8+ นาที</td>
+              </tr>
+              <tr>
+                <td>ประกันภัย</td>
+                <td>5–7 นาที</td>
+                <td>สอบถามกรมธรรม์, เคลม</td>
+              </tr>
+              <tr>
+                <td>เร่งรัดหนี้สิน</td>
+                <td>4–6 นาที</td>
+                <td>สมดุลระหว่างประสิทธิภาพและการเจรจา</td>
+              </tr>
+              <tr>
+                <td>สาธารณสุข</td>
+                <td>4–7 นาที</td>
+                <td>นัดหมาย, สอบถามข้อมูลผู้ป่วย</td>
+              </tr>
+              <tr>
+                <td>ค้าปลีก / อีคอมเมิร์ซ</td>
+                <td>3–6 นาที</td>
+                <td>สถานะคำสั่งซื้อ = สั้น; คืนสินค้า = นาน</td>
+              </tr>
+            </table>
+            <p class="benchmark-source">ค่าเฉลี่ยอุตสาหกรรม: 6 นาที</p>
+
+            <p style="margin-top: 10px;"><strong>จำไว้:</strong> AHT = เวลาคุย + เวลา Hold + งานหลังสาย ถ้าลูกค้าบอก "สายเราประมาณ 3 นาที" อาจหมายถึงแค่เวลาคุย AHT จริงมักเป็น 1.5–2 เท่าของเวลาคุย ค่าเริ่มต้นทั่วไปที่ปลอดภัยคือ <strong>3–6 นาที</strong></p>
+          </div>
+        </div>
+
+        <!-- 3C: AI Handle Time -->
+        <div class="estimation-subsection" id="est-ai-ht">
+          <h3 class="en-heading">3c. AI Handle Time</h3>
+          <h3 class="th-heading">3c. เวลาจัดการของ AI</h3>
+
+          <div class="en-block">
+            <p>This is how long the AI bot takes per voice call. Bots are faster than humans because there is no hold time and no after-call work.</p>
+
+            <div class="formula-box">
+              <div class="formula">AI Handle Time &asymp; Human AHT &times; 0.5 to 0.7</div>
+              <div class="formula-example">If human AHT is <span class="field-example">6</span> min, AI handle time is roughly <strong>3–4 min</strong></div>
+            </div>
+
+            <p><strong>Why is AI faster?</strong></p>
+            <ul>
+              <li>No hold time (bot has instant access to information)</li>
+              <li>No after-call work (data is logged automatically)</li>
+              <li>No small talk or pauses</li>
+              <li>For scripted outbound campaigns, bots can be even faster (1–2 min)</li>
+            </ul>
+            <p style="margin-top: 8px;"><strong>Safe default:</strong> If unsure, set AI Handle Time equal to the human AHT. This is the most conservative estimate — the real number will almost certainly be lower, making the actual savings even better.</p>
+          </div>
+
+          <div class="thai-block">
+            <p>คือระยะเวลาที่บอท AI ใช้ต่อสาย บอทเร็วกว่าคนเพราะไม่มีเวลา hold และไม่มีงานหลังสาย</p>
+
+            <div class="formula-box">
+              <div class="formula">AI Handle Time &asymp; AHT ของคน &times; 0.5 ถึง 0.7</div>
+              <div class="formula-example">ถ้า AHT คนเท่ากับ <span class="field-example">6</span> นาที, AI handle time จะประมาณ <strong>3–4 นาที</strong></div>
+            </div>
+
+            <p><strong>ทำไมบอทเร็วกว่า?</strong></p>
+            <ul>
+              <li>ไม่มีเวลา hold (บอทเข้าถึงข้อมูลทันที)</li>
+              <li>ไม่มีงานหลังสาย (บันทึกข้อมูลอัตโนมัติ)</li>
+              <li>ไม่มี small talk หรือหยุดพัก</li>
+              <li>สำหรับแคมเปญโทรออกแบบ scripted บอทอาจเร็วกว่ามาก (1–2 นาที)</li>
+            </ul>
+            <p style="margin-top: 8px;"><strong>ค่าเริ่มต้นที่ปลอดภัย:</strong> ถ้าไม่แน่ใจ ตั้ง AI Handle Time เท่ากับ AHT ของคน เป็นการประมาณแบบอนุรักษ์นิยมที่สุด — ตัวเลขจริงมักจะต่ำกว่า ทำให้ประหยัดได้มากกว่า</p>
+          </div>
+        </div>
+
+        <!-- 3D: Deflection Rate -->
+        <div class="estimation-subsection" id="est-deflection">
+          <h3 class="en-heading">3d. AI Deflection Rate</h3>
+          <h3 class="th-heading">3d. อัตรา AI Deflection</h3>
+
+          <div class="en-block">
+            <p>This is the percentage of calls the bot handles completely without a human. It depends on how mature the bot deployment is and how complex the calls are.</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>Deployment Stage</th>
+                <th>Typical Deflection</th>
+                <th>Timeline</th>
+              </tr>
+              <tr>
+                <td>New bot (basic FAQ, rule-based)</td>
+                <td>10–20%</td>
+                <td>Month 1–3</td>
+              </tr>
+              <tr>
+                <td>Early AI (learning, some integrations)</td>
+                <td>20–35%</td>
+                <td>Month 3–6</td>
+              </tr>
+              <tr>
+                <td>Mature AI (trained, CRM integrated)</td>
+                <td>35–50%</td>
+                <td>Month 6–12</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Advanced (full knowledge base, smart fallbacks)</td>
+                <td>50–70%</td>
+                <td>Year 2+</td>
+              </tr>
+              <tr>
+                <td>Routine-only queries (password reset, order status)</td>
+                <td>Up to 80%</td>
+                <td>When scope is narrow and simple</td>
+              </tr>
+            </table>
+            <p class="benchmark-source">Gartner predicts 80% automated resolution by 2029. Sources: Gartner, Freshworks 2024, Calabrio</p>
+
+            <p style="margin-top: 10px;"><strong>Recommendation for client presentations:</strong></p>
+            <ul>
+              <li><strong>Conservative pitch (first meeting):</strong> Use 15–20%. Easy to justify, hard to argue against.</li>
+              <li><strong>Realistic pitch (proposal stage):</strong> Use 30–40%. Supported by industry data.</li>
+              <li><strong>Optimistic pitch (mature deployment):</strong> Use 50–60%. Show as "Phase 2" target with the slider.</li>
+            </ul>
+          </div>
+
+          <div class="thai-block">
+            <p>คือเปอร์เซ็นต์ของสายที่บอทจัดการได้ครบถ้วนโดยไม่ต้องมีคน ขึ้นกับความเจริญเติบโตของการ deploy บอทและความซับซ้อนของสาย</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>ระยะ Deploy</th>
+                <th>Deflection ทั่วไป</th>
+                <th>ระยะเวลา</th>
+              </tr>
+              <tr>
+                <td>บอทใหม่ (FAQ พื้นฐาน, rule-based)</td>
+                <td>10–20%</td>
+                <td>เดือน 1–3</td>
+              </tr>
+              <tr>
+                <td>AI ช่วงต้น (เรียนรู้, เชื่อมบางระบบ)</td>
+                <td>20–35%</td>
+                <td>เดือน 3–6</td>
+              </tr>
+              <tr>
+                <td>AI เต็มที่ (เทรนแล้ว, เชื่อม CRM)</td>
+                <td>35–50%</td>
+                <td>เดือน 6–12</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>ขั้นสูง (knowledge base เต็ม, smart fallbacks)</td>
+                <td>50–70%</td>
+                <td>ปีที่ 2+</td>
+              </tr>
+              <tr>
+                <td>เฉพาะงาน routine (reset password, เช็คสถานะ)</td>
+                <td>สูงถึง 80%</td>
+                <td>เมื่อขอบเขตงานแคบและง่าย</td>
+              </tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>แนะนำสำหรับการนำเสนอ:</strong></p>
+            <ul>
+              <li><strong>แบบอนุรักษ์นิยม (ประชุมครั้งแรก):</strong> ใช้ 15–20% อธิบายง่าย โต้แย้งยาก</li>
+              <li><strong>แบบสมจริง (ขั้น proposal):</strong> ใช้ 30–40% มีข้อมูลอุตสาหกรรมรองรับ</li>
+              <li><strong>แบบมองไกล (ระยะยาว):</strong> ใช้ 50–60% โชว์เป็นเป้า "Phase 2" โดยเลื่อน slider</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 3E: Admin Hours Saved -->
+        <div class="estimation-subsection" id="est-admin">
+          <h3 class="en-heading">3e. Admin Hours Saved/Month — The Hidden Gold Mine</h3>
+          <h3 class="th-heading">3e. ชั่วโมง Admin ที่ประหยัด/เดือน — ขุมทองที่ซ่อนอยู่</h3>
+
+          <div class="en-block">
+            <p>This field captures the value of supervisory and administrative time that AI automation eliminates. Most clients underestimate this. Break it down into categories and add them up:</p>
+
+            <div class="admin-category">
+              <strong>1. CRM Data Cleaning &amp; Entry</strong>
+              <p>Managers or senior staff manually clean, update, and deduplicate CRM records.</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula">Hours/day per manager &times; Working days &times; Number of managers</div>
+                <div class="formula-example">Benchmark: 1–2 hrs/day. Example: <span class="field-example">1.5</span> hrs &times; <span class="field-example">22</span> days &times; <span class="field-example">3</span> managers = <strong>99 hrs/month</strong></div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>2. Report Generation &amp; QA Review</strong>
+              <p>Managers manually pull reports, review call recordings, and score agent performance. Industry data: managers currently review only 2–5% of calls manually. AI can auto-QA 100%.</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula">Hours/day on reports/QA &times; Working days &times; Number of supervisors</div>
+                <div class="formula-example">Benchmark: 1.5–3 hrs/day. Example: <span class="field-example">2</span> hrs &times; <span class="field-example">22</span> days &times; <span class="field-example">3</span> supervisors = <strong>132 hrs/month</strong></div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>3. Coaching Preparation</strong>
+              <p>Supervisors spend 5x more time preparing for coaching sessions than actually coaching. Finding the right calls, reviewing data, and writing feedback takes most of the time.</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula">Prep hours per session &times; Sessions per agent &times; Number of agents / Agents per supervisor</div>
+                <div class="formula-example">Benchmark: 2–3 hrs prep per session. Example: With AI auto-analysis, prep drops from <span class="field-example">2.5</span> hrs to <span class="field-example">0.5</span> hrs, saving <strong>~40 hrs/month</strong> per supervisor</div>
+              </div>
+              <p class="benchmark-source">Source: Balto survey of 515 contact center managers, SQM Group</p>
+            </div>
+
+            <div class="admin-category">
+              <strong>4. Scheduling &amp; Workforce Management</strong>
+              <p>Creating shift schedules, managing coverage, handling swap requests.</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula-example">Benchmark: 0.5–1 hr/day. Example: <span class="field-example">1</span> hr &times; <span class="field-example">22</span> days = <strong>22 hrs/month</strong></div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>5. Dialer Efficiency — Agent Idle Time Eliminated</strong>
+              <p>This is a major hidden cost. With <strong>manual dialing</strong>, agents spend only 10–15 minutes per hour actually talking. The rest is wasted on dialing, ringing, no-answers, and voicemails. A <strong>predictive dialer</strong> (like AI Rudder's) pushes talk time to 40–57 minutes per hour.</p>
+
+              <table class="benchmark-table" style="margin: 10px 0;">
+                <tr>
+                  <th>Dialing Method</th>
+                  <th>Agent Talk Time/Hour</th>
+                  <th>Wasted Time/Hour</th>
+                  <th>Utilization</th>
+                </tr>
+                <tr>
+                  <td>Manual dialing</td>
+                  <td>10–15 min</td>
+                  <td>45–50 min</td>
+                  <td>~20%</td>
+                </tr>
+                <tr>
+                  <td>Preview dialer</td>
+                  <td>20–30 min</td>
+                  <td>30–40 min</td>
+                  <td>~40%</td>
+                </tr>
+                <tr class="highlight-row">
+                  <td>Predictive dialer</td>
+                  <td>40–57 min</td>
+                  <td>3–20 min</td>
+                  <td>~80%</td>
+                </tr>
+              </table>
+
+              <p>The productivity gain from switching to a predictive dialer means you can do the <strong>same work with 40–60% fewer agents</strong>. This is a massive saving that goes beyond "admin hours" — you can capture it in two ways in the calculator:</p>
+              <ul>
+                <li><strong>Option A:</strong> Reduce the <em>Total Current Agents</em> to the number actually needed with a dialer, and add the salary difference as an Additional Cost on the client side.</li>
+                <li><strong>Option B (simpler):</strong> Convert the wasted agent hours into an equivalent admin-hour value. Formula below.</li>
+              </ul>
+
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula">Dialer savings = Agents &times; Hours saved/day &times; Working days &times; (Agent hourly rate)</div>
+                <div class="formula-example">If 100 agents each save 4 hrs/day: <span class="field-example">100</span> &times; <span class="field-example">4</span> &times; <span class="field-example">22</span> = <strong>8,800 hrs/month</strong><br>
+                  At agent rate of ฿156/hr (฿25,000 &divide; 160 hrs): = <strong>฿1,372,800/month in recovered productivity</strong></div>
+              </div>
+              <p class="benchmark-source">Sources: Intelligent Contacts, Nextiva, Sprinklr, NICE</p>
+              <p style="margin-top: 6px;"><strong>Note:</strong> This number can be very large. It's real, but you may want to present it separately to the client or capture it as agent headcount reduction rather than admin hours. Use your judgment based on the conversation.</p>
+            </div>
+
+            <div class="admin-total">
+              <div class="total-label">Example Total (without dialer savings)</div>
+              <div class="total-value">~293 hrs/month</div>
+              <div class="total-note">99 (CRM) + 132 (QA/Reports) + 40 (Coaching) + 22 (Scheduling) = 293 hrs</div>
+            </div>
+
+            <p><strong>For the Hourly Rate field:</strong> Calculate from the supervisor's monthly salary.</p>
+            <div class="formula-box">
+              <div class="formula">Hourly Rate = Monthly Salary &divide; 160 (working hours per month)</div>
+              <div class="formula-example">Example: Supervisor salary ฿40,000/month &divide; 160 = <strong>฿250/hr</strong></div>
+            </div>
+          </div>
+
+          <div class="thai-block">
+            <p>ช่องนี้จับมูลค่าของเวลา supervisor/admin ที่ AI ช่วยลดได้ ลูกค้าส่วนใหญ่ประเมินต่ำเกินไป แยกเป็นหมวดแล้วรวมกัน:</p>
+
+            <div class="admin-category">
+              <strong>1. ทำความสะอาดข้อมูล CRM</strong>
+              <p>ผู้จัดการหรือพนักงานอาวุโสล้างข้อมูล อัปเดต และลบข้อมูลซ้ำใน CRM</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula">ชม./วัน ต่อผู้จัดการ &times; วันทำงาน &times; จำนวนผู้จัดการ</div>
+                <div class="formula-example">Benchmark: 1–2 ชม./วัน ตัวอย่าง: <span class="field-example">1.5</span> ชม. &times; <span class="field-example">22</span> วัน &times; <span class="field-example">3</span> คน = <strong>99 ชม./เดือน</strong></div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>2. ทำรายงาน &amp; ตรวจสอบคุณภาพ (QA)</strong>
+              <p>ผู้จัดการดึงรายงาน ฟังบันทึกเสียง ให้คะแนนเอเจนต์ ปัจจุบันตรวจได้แค่ 2–5% ของสาย AI ตรวจได้ 100%</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula-example">Benchmark: 1.5–3 ชม./วัน ตัวอย่าง: <span class="field-example">2</span> ชม. &times; <span class="field-example">22</span> วัน &times; <span class="field-example">3</span> คน = <strong>132 ชม./เดือน</strong></div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>3. เตรียม Coaching</strong>
+              <p>Supervisor ใช้เวลาเตรียม coaching มากกว่าทำ coaching จริง 5 เท่า ค้นหาสาย ดูข้อมูล เขียน feedback ใช้เวลามาก</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula-example">Benchmark: 2–3 ชม. เตรียมต่อครั้ง ด้วย AI วิเคราะห์อัตโนมัติ เตรียมลดจาก 2.5 ชม. เหลือ 0.5 ชม. ประหยัด <strong>~40 ชม./เดือน</strong> ต่อ supervisor</div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>4. จัดตาราง &amp; Workforce Management</strong>
+              <p>สร้างตารางกะ จัดการ coverage จัดการขอสลับกะ</p>
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula-example">Benchmark: 0.5–1 ชม./วัน ตัวอย่าง: <span class="field-example">1</span> ชม. &times; <span class="field-example">22</span> วัน = <strong>22 ชม./เดือน</strong></div>
+              </div>
+            </div>
+
+            <div class="admin-category">
+              <strong>5. ประสิทธิภาพ Dialer — ลดเวลาว่างของเอเจนต์</strong>
+              <p>นี่คือต้นทุนแฝงขนาดใหญ่ <strong>โทรแบบ manual</strong> เอเจนต์คุยจริงแค่ 10–15 นาทีต่อชั่วโมง ที่เหลือเสียไปกับกดเบอร์ รอสาย ไม่รับ วอยซ์เมล <strong>Predictive dialer</strong> (เช่นของ AI Rudder) เพิ่มเวลาคุยเป็น 40–57 นาทีต่อชั่วโมง</p>
+
+              <table class="benchmark-table" style="margin: 10px 0;">
+                <tr>
+                  <th>วิธีโทร</th>
+                  <th>เวลาคุยจริง/ชม.</th>
+                  <th>เวลาเสีย/ชม.</th>
+                  <th>Utilization</th>
+                </tr>
+                <tr>
+                  <td>กดมือ (manual)</td>
+                  <td>10–15 นาที</td>
+                  <td>45–50 นาที</td>
+                  <td>~20%</td>
+                </tr>
+                <tr>
+                  <td>Preview dialer</td>
+                  <td>20–30 นาที</td>
+                  <td>30–40 นาที</td>
+                  <td>~40%</td>
+                </tr>
+                <tr class="highlight-row">
+                  <td>Predictive dialer</td>
+                  <td>40–57 นาที</td>
+                  <td>3–20 นาที</td>
+                  <td>~80%</td>
+                </tr>
+              </table>
+
+              <p>ผลิตภาพที่เพิ่มขึ้นจากการเปลี่ยนมาใช้ predictive dialer หมายความว่าทำงานเท่าเดิมด้วย<strong>เอเจนต์น้อยลง 40–60%</strong></p>
+
+              <div class="formula-box" style="margin-top: 8px;">
+                <div class="formula">ประหยัดจาก dialer = เอเจนต์ &times; ชม.ที่ประหยัด/วัน &times; วันทำงาน</div>
+                <div class="formula-example">100 เอเจนต์ ประหยัดคนละ 4 ชม./วัน: <span class="field-example">100</span> &times; <span class="field-example">4</span> &times; <span class="field-example">22</span> = <strong>8,800 ชม./เดือน</strong><br>
+                  อัตราเอเจนต์ ฿156/ชม. (฿25,000 &divide; 160 ชม.): = <strong>฿1,372,800/เดือน ของ productivity ที่ได้คืน</strong></div>
+              </div>
+              <p style="margin-top: 6px;"><strong>หมายเหตุ:</strong> ตัวเลขนี้อาจดูสูงมาก แต่เป็นจริง คุณอาจต้องนำเสนอแยกจากส่วนอื่น หรือจับเป็นการลดจำนวนเอเจนต์แทน admin hours ใช้วิจารณญาณตามบทสนทนากับลูกค้า</p>
+            </div>
+
+            <div class="admin-total">
+              <div class="total-label">ตัวอย่างรวม (ไม่รวม dialer savings)</div>
+              <div class="total-value">~293 ชม./เดือน</div>
+              <div class="total-note">99 (CRM) + 132 (QA/รายงาน) + 40 (Coaching) + 22 (จัดตาราง) = 293 ชม.</div>
+            </div>
+
+            <p><strong>สำหรับช่อง Hourly Rate:</strong> คำนวณจากเงินเดือน supervisor</p>
+            <div class="formula-box">
+              <div class="formula">Hourly Rate = เงินเดือน &divide; 160 (ชั่วโมงทำงานต่อเดือน)</div>
+              <div class="formula-example">ตัวอย่าง: เงินเดือน supervisor ฿40,000/เดือน &divide; 160 = <strong>฿250/ชม.</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3F: Additional Costs Checklist -->
+        <div class="estimation-subsection" id="est-addcosts">
+          <h3 class="en-heading">3f. Additional Costs — Common Items Clients Forget</h3>
+          <h3 class="th-heading">3f. ค่าใช้จ่ายเพิ่มเติม — รายการที่ลูกค้ามักลืม</h3>
+
+          <div class="en-block">
+            <p>When adding Additional Costs, prompt the client with these common items they may not think of:</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>Client Current State</th>
+                <th>Typical Range (THB/year)</th>
+                <th>Frequency</th>
+              </tr>
+              <tr>
+                <td>PBX / on-premise hardware maintenance</td>
+                <td>50,000–300,000</td>
+                <td>Yearly</td>
+              </tr>
+              <tr>
+                <td>Telecom line rental / SIP trunk</td>
+                <td>5,000–30,000/month</td>
+                <td>Monthly</td>
+              </tr>
+              <tr>
+                <td>CRM software licenses</td>
+                <td>500–5,000/agent/month</td>
+                <td>Per Agent</td>
+              </tr>
+              <tr>
+                <td>Contact center software (CCaaS)</td>
+                <td>2,000–10,000/agent/month</td>
+                <td>Per Agent</td>
+              </tr>
+              <tr>
+                <td>Agent training (new hires)</td>
+                <td>3,000–10,000 per new hire</td>
+                <td>Yearly (estimate annual turnover)</td>
+              </tr>
+              <tr>
+                <td>QA / call recording platform</td>
+                <td>1,000–3,000/agent/month</td>
+                <td>Per Agent</td>
+              </tr>
+              <tr>
+                <td>IT support &amp; infrastructure</td>
+                <td>50,000–200,000</td>
+                <td>Yearly</td>
+              </tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>Pro tip:</strong> The more client costs you capture, the bigger the savings gap looks. Don't forget to ask: "Do you have any maintenance contracts, license fees, or infrastructure costs for your current phone system?"</p>
+          </div>
+
+          <div class="thai-block">
+            <p>ตอนเพิ่ม Additional Costs ถามลูกค้าเรื่องค่าใช้จ่ายที่มักลืม:</p>
+
+            <table class="benchmark-table">
+              <tr>
+                <th>ค่าใช้จ่ายปัจจุบัน</th>
+                <th>ช่วงทั่วไป (บาท/ปี)</th>
+                <th>ความถี่</th>
+              </tr>
+              <tr>
+                <td>ดูแลฮาร์ดแวร์ PBX / on-premise</td>
+                <td>50,000–300,000</td>
+                <td>Yearly (รายปี)</td>
+              </tr>
+              <tr>
+                <td>ค่าเช่าสาย / SIP trunk</td>
+                <td>5,000–30,000/เดือน</td>
+                <td>Monthly (รายเดือน)</td>
+              </tr>
+              <tr>
+                <td>ค่า license CRM</td>
+                <td>500–5,000/เอเจนต์/เดือน</td>
+                <td>Per Agent (ต่อเอเจนต์)</td>
+              </tr>
+              <tr>
+                <td>ซอฟต์แวร์ Contact Center (CCaaS)</td>
+                <td>2,000–10,000/เอเจนต์/เดือน</td>
+                <td>Per Agent (ต่อเอเจนต์)</td>
+              </tr>
+              <tr>
+                <td>ฝึกอบรมเอเจนต์ใหม่</td>
+                <td>3,000–10,000 ต่อคน</td>
+                <td>Yearly (ประมาณจาก turnover ต่อปี)</td>
+              </tr>
+              <tr>
+                <td>ระบบ QA / บันทึกเสียง</td>
+                <td>1,000–3,000/เอเจนต์/เดือน</td>
+                <td>Per Agent (ต่อเอเจนต์)</td>
+              </tr>
+              <tr>
+                <td>IT support &amp; โครงสร้างพื้นฐาน</td>
+                <td>50,000–200,000</td>
+                <td>Yearly (รายปี)</td>
+              </tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>เคล็ดลับ:</strong> ยิ่งจับค่าใช้จ่ายฝั่งลูกค้าได้มาก ส่วนต่างยิ่งชัด อย่าลืมถาม: "มีค่าบำรุงรักษา ค่า license หรือค่าโครงสร้างพื้นฐานสำหรับระบบโทรศัพท์ปัจจุบันไหม?"</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION 4: STEP-BY-STEP WALKTHROUGH ===== -->
+    <div class="guide-section" id="walkthrough">
+      <div class="card">
+        <h2 class="en-heading">4. Step-by-Step Walkthrough</h2>
+        <h2 class="th-heading">4. คำแนะนำทีละขั้นตอน</h2>
+
+        <div class="en-block">
+          <p>We'll walk through <strong>Scenario B: AI Bot Only</strong> using a real example. The same steps apply to Scenarios A and C — just change which rate fields you fill in (see the Quick Reference Cards below).</p>
+
+          <p style="margin-top: 8px;"><strong>Example client:</strong></p>
+          <ul>
+            <li>100 agents, ฿25,000/month salary each</li>
+            <li>100,000 voice calls/month, average 3 minutes each</li>
+            <li>Current telco rate: ฿2/min</li>
+            <li>AI Rudder bot rate: ฿1/min, AI handle time: 3 min</li>
+            <li>Target deflection: 20%</li>
+          </ul>
+        </div>
+
+        <div class="thai-block">
+          <p>เราจะสาธิตโดยใช้ <strong>สถานการณ์ B: AI Bot Only</strong> เป็นตัวอย่าง ขั้นตอนเดียวกันใช้ได้กับสถานการณ์ A และ C — แค่เปลี่ยนช่องที่ต้องกรอก (ดูการ์ดอ้างอิงด่วนด้านล่าง)</p>
+
+          <p style="margin-top: 8px;"><strong>ตัวอย่างลูกค้า:</strong></p>
+          <ul>
+            <li>เอเจนต์ 100 คน, เงินเดือน ฿25,000/เดือน</li>
+            <li>สายโทร 100,000 สาย/เดือน, เฉลี่ย 3 นาทีต่อสาย</li>
+            <li>อัตราค่าโทรปัจจุบัน: ฿2/นาที</li>
+            <li>อัตราบอท AI Rudder: ฿1/นาที, เวลาจัดการ AI: 3 นาที</li>
+            <li>เป้า deflection: 20%</li>
+          </ul>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step-block">
+          <div class="step-title"><span class="step-number">1</span> <span class="en-text">Client Operations</span><span class="th-text">ข้อมูลลูกค้า</span></div>
+
+          <div class="en-block">
+            <p>Fill in the client's current team and call volume:</p>
+            <table>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>Total Current Agents</td>
+                <td><span class="field-example">100</span></td>
+              </tr>
+              <tr>
+                <td>Avg Monthly Salary per Agent</td>
+                <td><span class="field-example">25000</span></td>
+              </tr>
+            </table>
+            <p style="margin-top: 10px;">Then add a <strong>Voice</strong> channel:</p>
+            <table>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>Channel Type</td>
+                <td><span class="field-example">Voice</span></td>
+              </tr>
+              <tr>
+                <td>Volume (monthly calls)</td>
+                <td><span class="field-example">100000</span></td>
+              </tr>
+              <tr>
+                <td>Avg Handle Time (Minutes)</td>
+                <td><span class="field-example">3</span></td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="thai-block">
+            <p>กรอกข้อมูลทีมงานปัจจุบันและปริมาณสาย:</p>
+            <table>
+              <tr>
+                <th>ช่อง</th>
+                <th>ค่า</th>
+              </tr>
+              <tr>
+                <td>Total Current Agents</td>
+                <td><span class="field-example">100</span></td>
+              </tr>
+              <tr>
+                <td>Avg Monthly Salary per Agent</td>
+                <td><span class="field-example">25000</span></td>
+              </tr>
+            </table>
+            <p style="margin-top: 10px;">จากนั้นเพิ่มช่องทาง <strong>Voice</strong>:</p>
+            <table>
+              <tr>
+                <th>ช่อง</th>
+                <th>ค่า</th>
+              </tr>
+              <tr>
+                <td>Channel Type</td>
+                <td><span class="field-example">Voice</span></td>
+              </tr>
+              <tr>
+                <td>Volume (จำนวนสาย/เดือน)</td>
+                <td><span class="field-example">100000</span></td>
+              </tr>
+              <tr>
+                <td>Avg Handle Time (นาที)</td>
+                <td><span class="field-example">3</span></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-block">
+          <div class="step-title"><span class="step-number">2</span> <span class="en-text">Rates Comparison</span><span class="th-text">เปรียบเทียบอัตรา</span></div>
+
+          <div class="en-block">
+            <p>In the Rates Comparison section, you'll see a row for the Voice channel you just added. Fill in the rates:</p>
+            <table>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+                <th>Why</th>
+              </tr>
+              <tr>
+                <td>Client Rate (per min)</td>
+                <td><span class="field-example">2</span></td>
+                <td>Client's current telco rate</td>
+              </tr>
+              <tr>
+                <td>AI Rudder Bot Rate (per min)</td>
+                <td><span class="field-example">1</span></td>
+                <td>Our bot rate for deflected calls</td>
+              </tr>
+              <tr>
+                <td>AI Rudder Call Rate (per min)</td>
+                <td><span class="field-example">0</span></td>
+                <td>Leave at 0 — bot-only, no cloud CC</td>
+              </tr>
+              <tr>
+                <td>AI Handle Time (Minutes)</td>
+                <td><span class="field-example">3</span></td>
+                <td>How long the bot takes per call</td>
+              </tr>
+            </table>
+            <p style="margin-top: 8px;"><strong>Key rule:</strong> For Scenario B (Bot Only), fill in the Bot Rate and leave the Call Rate at 0. For Scenario A (Cloud CC), do the opposite. For Scenario C (Hybrid), fill in both.</p>
+          </div>
+
+          <div class="thai-block">
+            <p>ในส่วน Rates Comparison จะเห็นแถวของช่องทาง Voice ที่เพิ่มมา กรอกอัตราค่าบริการ:</p>
+            <table>
+              <tr>
+                <th>ช่อง</th>
+                <th>ค่า</th>
+                <th>เหตุผล</th>
+              </tr>
+              <tr>
+                <td>Client Rate (ต่อนาที)</td>
+                <td><span class="field-example">2</span></td>
+                <td>อัตราค่าโทรปัจจุบันของลูกค้า</td>
+              </tr>
+              <tr>
+                <td>AI Rudder Bot Rate (ต่อนาที)</td>
+                <td><span class="field-example">1</span></td>
+                <td>อัตราบอทสำหรับสายที่ AI รับ</td>
+              </tr>
+              <tr>
+                <td>AI Rudder Call Rate (ต่อนาที)</td>
+                <td><span class="field-example">0</span></td>
+                <td>ปล่อยเป็น 0 — ใช้บอทอย่างเดียว ไม่มี cloud CC</td>
+              </tr>
+              <tr>
+                <td>AI Handle Time (นาที)</td>
+                <td><span class="field-example">3</span></td>
+                <td>ระยะเวลาบอทจัดการแต่ละสาย</td>
+              </tr>
+            </table>
+            <p style="margin-top: 8px;"><strong>กฎสำคัญ:</strong> สถานการณ์ B (Bot Only) กรอก Bot Rate ปล่อย Call Rate เป็น 0 สถานการณ์ A (Cloud CC) ทำตรงข้าม สถานการณ์ C (Hybrid) กรอกทั้งคู่</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-block">
+          <div class="step-title"><span class="step-number">3</span> <span class="en-text">Additional Costs</span><span class="th-text">ค่าใช้จ่ายเพิ่มเติม</span></div>
+
+          <div class="en-block">
+            <p>Add any extra costs that aren't covered by the rates above. For example:</p>
+            <table>
+              <tr>
+                <th>Side</th>
+                <th>Cost Name</th>
+                <th>Amount</th>
+                <th>Frequency</th>
+              </tr>
+              <tr>
+                <td><strong>Client Current State</strong></td>
+                <td>PBX Maintenance</td>
+                <td><span class="field-example">120000</span></td>
+                <td>Yearly</td>
+              </tr>
+              <tr>
+                <td><strong>AI Rudder Solution</strong></td>
+                <td>Setup &amp; Integration</td>
+                <td><span class="field-example">50000</span></td>
+                <td>One-time</td>
+              </tr>
+            </table>
+            <p style="margin-top: 8px;">Click <strong>"Add Cost Item"</strong> under the relevant side to add each row. You can add as many as you need.</p>
+          </div>
+
+          <div class="thai-block">
+            <p>เพิ่มค่าใช้จ่ายอื่นๆ ที่ไม่รวมอยู่ในอัตราข้างต้น เช่น:</p>
+            <table>
+              <tr>
+                <th>ฝั่ง</th>
+                <th>ชื่อ</th>
+                <th>จำนวนเงิน</th>
+                <th>ความถี่</th>
+              </tr>
+              <tr>
+                <td><strong>Client Current State</strong></td>
+                <td>ค่าดูแล PBX</td>
+                <td><span class="field-example">120000</span></td>
+                <td>Yearly (รายปี)</td>
+              </tr>
+              <tr>
+                <td><strong>AI Rudder Solution</strong></td>
+                <td>ค่า Setup &amp; Integration</td>
+                <td><span class="field-example">50000</span></td>
+                <td>One-time (ครั้งเดียว)</td>
+              </tr>
+            </table>
+            <p style="margin-top: 8px;">กด <strong>"Add Cost Item"</strong> ใต้ฝั่งที่ต้องการเพื่อเพิ่มแต่ละรายการ เพิ่มได้ไม่จำกัด</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-block">
+          <div class="step-title"><span class="step-number">4</span> <span class="en-text">Efficiency Offset</span><span class="th-text">ประสิทธิภาพที่เพิ่มขึ้น</span></div>
+
+          <div class="en-block">
+            <p>Set the <strong>AI Deflection Rate</strong> slider to <span class="field-example">20%</span>. This means 20% of calls will be fully handled by the AI bot without a human.</p>
+
+            <p style="margin-top: 10px;">The derived metrics below the slider will update automatically:</p>
+            <table>
+              <tr>
+                <th>Metric</th>
+                <th>What it means</th>
+                <th>In our example</th>
+              </tr>
+              <tr>
+                <td><strong>Agents Replaced</strong></td>
+                <td>How many agents are no longer needed</td>
+                <td>20 of 100</td>
+              </tr>
+              <tr>
+                <td><strong>Traffic Routed to AI</strong></td>
+                <td>Same as the deflection slider value</td>
+                <td>20%</td>
+              </tr>
+              <tr>
+                <td><strong>Payroll Saved</strong></td>
+                <td>Monthly salary savings from fewer agents</td>
+                <td>฿500,000/mo</td>
+              </tr>
+              <tr>
+                <td><strong>Admin Value Reclaimed</strong></td>
+                <td>Value of admin hours saved (set above)</td>
+                <td>฿24,000/mo</td>
+              </tr>
+            </table>
+
+            <p style="margin-top: 8px;"><strong>Tip:</strong> For Scenario A (Cloud CC only), keep deflection at <strong>0%</strong> because there is no bot to deflect calls.</p>
+          </div>
+
+          <div class="thai-block">
+            <p>ตั้ง slider <strong>AI Deflection Rate</strong> ไปที่ <span class="field-example">20%</span> หมายความว่า 20% ของสายจะถูกจัดการโดย AI bot ทั้งหมดโดยไม่ต้องมีคน</p>
+
+            <p style="margin-top: 10px;">ตัวชี้วัดด้านล่าง slider จะอัปเดตอัตโนมัติ:</p>
+            <table>
+              <tr>
+                <th>ตัวชี้วัด</th>
+                <th>หมายความว่า</th>
+                <th>ในตัวอย่างนี้</th>
+              </tr>
+              <tr>
+                <td><strong>Agents Replaced</strong></td>
+                <td>จำนวนเอเจนต์ที่ไม่ต้องใช้แล้ว</td>
+                <td>20 จาก 100</td>
+              </tr>
+              <tr>
+                <td><strong>Traffic Routed to AI</strong></td>
+                <td>เท่ากับค่า deflection slider</td>
+                <td>20%</td>
+              </tr>
+              <tr>
+                <td><strong>Payroll Saved</strong></td>
+                <td>เงินเดือนที่ประหยัดจากการลดเอเจนต์</td>
+                <td>฿500,000/เดือน</td>
+              </tr>
+              <tr>
+                <td><strong>Admin Value Reclaimed</strong></td>
+                <td>มูลค่าของชั่วโมง admin ที่ประหยัดได้</td>
+                <td>฿24,000/เดือน</td>
+              </tr>
+            </table>
+
+            <p style="margin-top: 8px;"><strong>เคล็ดลับ:</strong> สำหรับสถานการณ์ A (Cloud CC เท่านั้น) ให้ตั้ง deflection ที่ <strong>0%</strong> เพราะไม่มีบอทมารับสาย</p>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-block">
+          <div class="step-title"><span class="step-number">5</span> <span class="en-text">Reading the Dashboard</span><span class="th-text">อ่านผลลัพธ์ Dashboard</span></div>
+
+          <div class="en-block">
+            <p>The right panel shows the results. Here's what each metric means:</p>
+
+            <table>
+              <tr>
+                <th>Metric</th>
+                <th>Meaning</th>
+              </tr>
+              <tr>
+                <td><strong>Current Monthly Spend</strong></td>
+                <td>Everything the client pays today: channel costs + full payroll + additional costs</td>
+              </tr>
+              <tr>
+                <td><strong>AI Rudder Monthly Spend</strong></td>
+                <td>What the client would pay with AI Rudder: channel costs + reduced payroll + additional costs</td>
+              </tr>
+              <tr>
+                <td><strong>Monthly Savings</strong></td>
+                <td>The difference between current and AI Rudder spend (green = saving money)</td>
+              </tr>
+              <tr>
+                <td><strong>Cost Reduction</strong></td>
+                <td>Monthly savings as a percentage of current spend</td>
+              </tr>
+              <tr>
+                <td><strong>Initial Investment</strong></td>
+                <td>One-time setup costs (from "Additional Costs" items with frequency "One-time")</td>
+              </tr>
+              <tr>
+                <td><strong>Break-Even</strong></td>
+                <td>The month when total savings exceed the initial investment</td>
+              </tr>
+              <tr>
+                <td><strong>Year 1 Net Savings</strong></td>
+                <td>12 months of monthly savings minus the initial investment — the bottom-line number</td>
+              </tr>
+            </table>
+
+            <h3>Reading the Chart</h3>
+            <p>The chart shows two lines over 24 months:</p>
+            <ul>
+              <li><strong>Red line</strong> — Client's cumulative cost (current state)</li>
+              <li><strong>Blue line</strong> — AI Rudder's cumulative cost</li>
+              <li><strong>Green shaded area</strong> — The gap between the lines = your savings</li>
+            </ul>
+            <p>The wider the green area grows, the more money the client saves. Point this out during presentations — it's the most powerful visual in the tool.</p>
+          </div>
+
+          <div class="thai-block">
+            <p>แผงด้านขวาแสดงผลลัพธ์ แต่ละตัวชี้วัดหมายความว่า:</p>
+
+            <table>
+              <tr>
+                <th>ตัวชี้วัด</th>
+                <th>ความหมาย</th>
+              </tr>
+              <tr>
+                <td><strong>Current Monthly Spend</strong></td>
+                <td>ทุกอย่างที่ลูกค้าจ่ายวันนี้: ค่าช่องทาง + เงินเดือนทั้งหมด + ค่าใช้จ่ายเพิ่มเติม</td>
+              </tr>
+              <tr>
+                <td><strong>AI Rudder Monthly Spend</strong></td>
+                <td>สิ่งที่ลูกค้าจ่ายกับ AI Rudder: ค่าช่องทาง + เงินเดือนที่ลดลง + ค่าใช้จ่ายเพิ่มเติม</td>
+              </tr>
+              <tr>
+                <td><strong>Monthly Savings</strong></td>
+                <td>ส่วนต่างระหว่างค่าใช้จ่ายปัจจุบันกับ AI Rudder (สีเขียว = ประหยัด)</td>
+              </tr>
+              <tr>
+                <td><strong>Cost Reduction</strong></td>
+                <td>ประหยัดรายเดือนเป็น % ของค่าใช้จ่ายปัจจุบัน</td>
+              </tr>
+              <tr>
+                <td><strong>Initial Investment</strong></td>
+                <td>ค่าใช้จ่ายครั้งเดียว (จากรายการ "Additional Costs" ที่เป็น "One-time")</td>
+              </tr>
+              <tr>
+                <td><strong>Break-Even</strong></td>
+                <td>เดือนที่ยอดประหยัดสะสมเกินค่า setup</td>
+              </tr>
+              <tr>
+                <td><strong>Year 1 Net Savings</strong></td>
+                <td>ประหยัด 12 เดือน ลบค่า setup = ตัวเลขสรุป</td>
+              </tr>
+            </table>
+
+            <h3>การอ่านกราฟ</h3>
+            <p>กราฟแสดงเส้น 2 เส้นตลอด 24 เดือน:</p>
+            <ul>
+              <li><strong>เส้นแดง</strong> — ต้นทุนสะสมของลูกค้า (สถานะปัจจุบัน)</li>
+              <li><strong>เส้นน้ำเงิน</strong> — ต้นทุนสะสมของ AI Rudder</li>
+              <li><strong>พื้นที่สีเขียว</strong> — ช่องว่างระหว่างเส้น = ยอดประหยัด</li>
+            </ul>
+            <p>ยิ่งพื้นที่สีเขียวกว้างขึ้น ยิ่งประหยัดมาก ชี้ให้ลูกค้าดูตรงนี้ในการนำเสนอ — นี่คือภาพที่ทรงพลังที่สุดในเครื่องมือ</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION 5: QUICK REFERENCE CARDS ===== -->
+    <div class="guide-section" id="quickref">
+      <div class="card">
+        <h2 class="en-heading">5. Quick Reference Cards</h2>
+        <h2 class="th-heading">5. การ์ดอ้างอิงด่วน</h2>
+
+        <div class="en-block">
+          <p>Keep these handy — one card per scenario showing exactly what to fill in.</p>
+        </div>
+        <div class="thai-block">
+          <p>เก็บไว้ใช้อ้างอิงด่วน — แต่ละการ์ดบอกว่าต้องกรอกอะไรบ้าง</p>
+        </div>
+
+        <div class="en-block">
+          <div class="scenario-cards">
+            <!-- Card A -->
+            <div class="scenario-card card-a">
+              <h4>A: Cloud Contact Center</h4>
+              <p><strong>Use when:</strong> Client switches to AI Rudder's cloud phone system, no bot.</p>
+              <ul>
+                <li>Deflection: <span class="tag-skip">0%</span></li>
+                <li>Bot Rate: <span class="tag-skip">Leave at 0</span></li>
+                <li>Call Rate: <span class="tag-fill">Fill in</span></li>
+                <li>AI Handle Time: <span class="tag-skip">Not used</span></li>
+              </ul>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">The savings come from a lower per-minute call rate and additional cost differences.</p>
+            </div>
+            <!-- Card B -->
+            <div class="scenario-card card-b">
+              <h4>B: AI Bot Only</h4>
+              <p><strong>Use when:</strong> Client keeps their phone system but adds AI bot for automation.</p>
+              <ul>
+                <li>Deflection: <span class="tag-fill">10–80%</span></li>
+                <li>Bot Rate: <span class="tag-fill">Fill in</span></li>
+                <li>Call Rate: <span class="tag-skip">Leave at 0</span></li>
+                <li>AI Handle Time: <span class="tag-fill">Fill in</span></li>
+              </ul>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">The savings come from deflection reducing agent headcount and using a cheaper bot rate.</p>
+            </div>
+            <!-- Card C -->
+            <div class="scenario-card card-c">
+              <h4>C: Hybrid (Bot + CC)</h4>
+              <p><strong>Use when:</strong> Client gets both the bot and cloud contact center.</p>
+              <ul>
+                <li>Deflection: <span class="tag-fill">10–80%</span></li>
+                <li>Bot Rate: <span class="tag-fill">Fill in</span></li>
+                <li>Call Rate: <span class="tag-fill">Fill in</span></li>
+                <li>AI Handle Time: <span class="tag-fill">Fill in</span></li>
+              </ul>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">Maximum savings: bot deflects calls AND the remaining calls use a cheaper cloud rate.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="thai-block">
+          <div class="scenario-cards">
+            <!-- Card A -->
+            <div class="scenario-card card-a">
+              <h4>A: Cloud Contact Center</h4>
+              <p><strong>ใช้เมื่อ:</strong> ลูกค้าต้องการย้ายระบบโทรศัพท์มาใช้ cloud ของ AI Rudder (ไม่มีบอท)</p>
+              <ul>
+                <li>Deflection: <span class="tag-skip">0%</span></li>
+                <li>Bot Rate: <span class="tag-skip">ปล่อยเป็น 0</span></li>
+                <li>Call Rate: <span class="tag-fill">กรอก</span></li>
+                <li>AI Handle Time: <span class="tag-skip">ไม่ใช้</span></li>
+              </ul>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">ประหยัดจากอัตราค่าโทรต่อนาทีที่ถูกกว่าและส่วนต่างค่าใช้จ่ายเพิ่มเติม</p>
+            </div>
+            <!-- Card B -->
+            <div class="scenario-card card-b">
+              <h4>B: AI Bot Only</h4>
+              <p><strong>ใช้เมื่อ:</strong> ลูกค้าใช้ระบบโทรศัพท์เดิม แต่เพิ่ม AI bot เพื่อรับสายอัตโนมัติ</p>
+              <ul>
+                <li>Deflection: <span class="tag-fill">10–80%</span></li>
+                <li>Bot Rate: <span class="tag-fill">กรอก</span></li>
+                <li>Call Rate: <span class="tag-skip">ปล่อยเป็น 0</span></li>
+                <li>AI Handle Time: <span class="tag-fill">กรอก</span></li>
+              </ul>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">ประหยัดจาก deflection ลดจำนวนเอเจนต์และอัตราบอทที่ถูกกว่า</p>
+            </div>
+            <!-- Card C -->
+            <div class="scenario-card card-c">
+              <h4>C: Hybrid (Bot + CC)</h4>
+              <p><strong>ใช้เมื่อ:</strong> ลูกค้าต้องการทั้งบอทอัตโนมัติและ cloud contact center</p>
+              <ul>
+                <li>Deflection: <span class="tag-fill">10–80%</span></li>
+                <li>Bot Rate: <span class="tag-fill">กรอก</span></li>
+                <li>Call Rate: <span class="tag-fill">กรอก</span></li>
+                <li>AI Handle Time: <span class="tag-fill">กรอก</span></li>
+              </ul>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">ประหยัดสูงสุด: บอทรับสายส่วนหนึ่ง + สายที่เหลือใช้ cloud rate ที่ถูกกว่า</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 6: TIPS FOR CLIENT MEETINGS ===== -->
+    <div class="guide-section" id="tips">
+      <div class="card">
+        <h2 class="en-heading">6. Tips for Client Meetings</h2>
+        <h2 class="th-heading">6. เคล็ดลับสำหรับการประชุมกับลูกค้า</h2>
+
+        <div class="en-block">
+          <ul class="tip-list">
+            <li><strong>Save scenarios before the meeting.</strong> Use the Save button to pre-fill the calculator with the client's data. During the meeting, just click Load and you're ready to go.</li>
+            <li><strong>Adjust the deflection slider live.</strong> This is your most powerful move. Slide it up and down during the meeting to show "What if 20% of calls go to the bot? What about 40%?" The dashboard updates instantly.</li>
+            <li><strong>Use the chart to tell the story.</strong> The growing green gap between the red and blue lines is your visual proof. Point at it and say "This green area is your savings — and it keeps growing every month."</li>
+            <li><strong>Start conservative, then go higher.</strong> Begin with a low deflection rate (10–20%) to set realistic expectations. Then show what happens at 40–50% once the bot is fully trained. Let the client see the potential.</li>
+            <li><strong>Add the client's real costs.</strong> Use Additional Costs to include PBX maintenance, software licenses, training budgets, etc. The more complete the picture, the more convincing the comparison.</li>
+          </ul>
+        </div>
+
+        <div class="thai-block">
+          <ul class="tip-list">
+            <li><strong>บันทึกสถานการณ์ก่อนประชุม</strong> ใช้ปุ่ม Save เพื่อกรอกข้อมูลลูกค้าล่วงหน้า ตอนประชุมแค่กด Load ก็พร้อมใช้งาน</li>
+            <li><strong>ปรับ slider deflection สดๆ ในที่ประชุม</strong> นี่คือเทคนิคที่ทรงพลังที่สุด เลื่อนขึ้นลงเพื่อโชว์ "ถ้า 20% ของสายไปที่บอท? ถ้า 40% ล่ะ?" Dashboard อัปเดตทันที</li>
+            <li><strong>ใช้กราฟเล่าเรื่อง</strong> พื้นที่สีเขียวที่ขยายขึ้นเรื่อยๆ ระหว่างเส้นแดงกับน้ำเงินคือหลักฐาน ชี้แล้วบอกว่า "พื้นที่สีเขียวนี้คือยอดประหยัด — และมันเพิ่มขึ้นทุกเดือน"</li>
+            <li><strong>เริ่มแบบอนุรักษ์นิยม แล้วค่อยเพิ่ม</strong> เริ่มด้วย deflection ต่ำ (10–20%) เพื่อตั้งความคาดหวังจริง แล้วโชว์ว่าถ้า 40–50% หลังบอทเทรนเสร็จจะเป็นยังไง ให้ลูกค้าเห็นศักยภาพ</li>
+            <li><strong>เพิ่มค่าใช้จ่ายจริงของลูกค้า</strong> ใช้ Additional Costs เพิ่มค่าดูแล PBX, ค่า license ซอฟต์แวร์, งบฝึกอบรม ฯลฯ ยิ่งภาพสมบูรณ์เท่าไหร่ การเปรียบเทียบยิ่งน่าเชื่อถือ</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 7: BUSINESS IMPACT BY INDUSTRY ===== -->
+    <div class="guide-section" id="impact">
+      <div class="card">
+        <h2 class="en-heading">7. Beyond Cost Savings: Business Impact by Industry</h2>
+        <h2 class="th-heading">7. มากกว่าประหยัดต้นทุน: ผลกระทบทางธุรกิจแยกตามอุตสาหกรรม</h2>
+
+        <div class="en-block">
+          <p>The cost calculator shows direct cost comparison. But for many use cases, the real value of AI Rudder is on the <strong>revenue and business outcome side</strong> — more calls made, more deals closed, more collections recovered, fewer failed deliveries. This section gives you industry benchmarks and talk tracks for when the cost calculator alone doesn't tell the full story.</p>
+        </div>
+        <div class="thai-block">
+          <p>เครื่องคิดเลขแสดงเปรียบเทียบต้นทุนโดยตรง แต่สำหรับหลาย use case มูลค่าที่แท้จริงของ AI Rudder อยู่ที่<strong>ฝั่งรายได้และผลลัพธ์ทางธุรกิจ</strong> — โทรได้มากขึ้น ปิดดีลได้มากขึ้น เก็บหนี้ได้มากขึ้น ส่งของสำเร็จมากขึ้น ส่วนนี้ให้ benchmark อุตสาหกรรมและ talk track สำหรับกรณีที่เครื่องคิดเลขอย่างเดียวไม่สามารถเล่าเรื่องทั้งหมดได้</p>
+        </div>
+
+        <!-- COST-UP WARNING BOX -->
+        <div class="cost-up-box">
+          <h4 class="en-heading">When the Calculator Shows AI Rudder as More Expensive</h4>
+          <h4 class="th-heading">เมื่อเครื่องคิดเลขแสดงว่า AI Rudder แพงกว่า</h4>
+          <div class="en-block">
+            <p>This happens when bot rate is higher than the client's current rate and deflection is high. <strong>Don't panic — reframe the conversation:</strong></p>
+            <ol>
+              <li><strong>Show cost per outcome, not total cost.</strong> "Yes, total communication cost rises by ฿X. But cost per successful collection drops from ฿Y to ฿Z."</li>
+              <li><strong>Quantify the revenue side.</strong> Use the napkin-math examples below to show the profit impact.</li>
+              <li><strong>Highlight unlimited capacity.</strong> "AI Rudder doesn't charge per call — your bot can make 10x more attempts at no extra cost per attempt. More attempts = more contacts = more revenue."</li>
+              <li><strong>Separate cost increase from value increase.</strong> "The cost increase is ฿X/month. The additional revenue is ฿Y/month. The net profit improvement is ฿Z/month."</li>
+            </ol>
+          </div>
+          <div class="thai-block">
+            <p>สิ่งนี้เกิดขึ้นเมื่ออัตราบอทสูงกว่าอัตราปัจจุบันของลูกค้าและ deflection สูง <strong>ไม่ต้องตกใจ — เปลี่ยนมุมสนทนา:</strong></p>
+            <ol>
+              <li><strong>โชว์ต้นทุนต่อผลลัพธ์ ไม่ใช่ต้นทุนรวม</strong> "ใช่ ค่าสื่อสารรวมเพิ่มขึ้น ฿X แต่ต้นทุนต่อการเก็บหนี้สำเร็จลดจาก ฿Y เหลือ ฿Z"</li>
+              <li><strong>คำนวณฝั่งรายได้</strong> ใช้ตัวอย่าง napkin math ด้านล่างเพื่อโชว์ผลกำไร</li>
+              <li><strong>เน้นเรื่อง capacity ไม่จำกัด</strong> "AI Rudder ไม่คิดค่าต่อสาย — บอทโทรได้มากกว่า 10 เท่าโดยไม่มีค่าใช้จ่ายเพิ่ม ยิ่งโทรมาก ยิ่งติดต่อได้ ยิ่งได้รายได้"</li>
+              <li><strong>แยกต้นทุนที่เพิ่มออกจากมูลค่าที่เพิ่ม</strong> "ต้นทุนเพิ่ม ฿X/เดือน รายได้เพิ่ม ฿Y/เดือน กำไรสุทธิเพิ่ม ฿Z/เดือน"</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- COLLECTIONS -->
+        <div class="industry-card ic-collections" id="impact-collections">
+          <h4 class="en-heading">Collections / Debt Recovery</h4>
+          <h4 class="th-heading">เร่งรัดหนี้สิน</h4>
+
+          <div class="en-block">
+            <div class="pain-point">Industry average Right-Party Contact (RPC) rate is only <strong>26%</strong>. 23% of call centers reach less than 20% of debtors. Manual capacity is the bottleneck — not willingness to pay.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Manual / Current</th><th>With AI Automation</th></tr>
+              <tr><td>Contact rate improvement</td><td>Baseline</td><td><strong>+40%</strong> higher answer rate</td></tr>
+              <tr><td>Payment arrangement rate</td><td>Baseline</td><td><strong>+31%</strong> improvement</td></tr>
+              <tr><td>Overall recovery rate</td><td>Baseline</td><td><strong>+25–35%</strong> higher</td></tr>
+              <tr><td>Collection speed</td><td>Baseline</td><td><strong>35% faster</strong></td></tr>
+              <tr><td>Cost per account</td><td>฿500–800</td><td><strong>Reduced 20–70%</strong></td></tr>
+              <tr><td>Compliance complaints</td><td>Baseline</td><td><strong>−87%</strong> (automated limits)</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>AI Rudder advantages for collections:</strong></p>
+            <ul>
+              <li><strong>Unlimited call attempts</strong> — No per-call charge means you can attempt every account multiple times</li>
+              <li><strong>Time-of-day optimization</strong> — Bot calls at the best time for each debtor, not when agents are available</li>
+              <li><strong>Customizable tone &amp; dialog</strong> — Firm for overdue, gentle for first reminder, escalating over time</li>
+              <li><strong>Automatic outreach limits</strong> — Set max attempts (e.g., 5 tries over 2 weeks, then cool off) for compliance</li>
+              <li><strong>24/7 operation</strong> — Calls during evenings/weekends when debtors are more reachable</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">Napkin Math Example</div>
+              <p>Portfolio: 10,000 accounts, average ฿5,000 per account.<br>
+                Current recovery: 15% = 1,500 accounts = <strong>฿7.5M recovered</strong><br>
+                With AI (+30% uplift): 19.5% = 1,950 accounts = <strong>฿9.75M recovered</strong><br>
+                <strong>Additional recovery: ฿2.25M/month</strong><br>
+                Even if AI Rudder costs ฿500K more per month than the current solution, net profit increase = <strong>฿1.75M/month</strong></p>
+            </div>
+
+            <div class="talk-track">"Your team reaches 26% of debtors — not because people won't pay, but because you can't reach them fast enough. Our bot contacts 40% more people and recovers 25-35% more debt. Even though the per-minute rate is higher, the additional recovery far exceeds the cost increase."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">ค่าเฉลี่ยอุตสาหกรรม Right-Party Contact (RPC) อยู่ที่แค่ <strong>26%</strong> 23% ของ call center ติดต่อลูกหนี้ได้ไม่ถึง 20% คอขวดคือ capacity ไม่ใช่ความเต็มใจจ่าย</div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>Manual / ปัจจุบัน</th><th>ใช้ AI อัตโนมัติ</th></tr>
+              <tr><td>อัตราการติดต่อสำเร็จ</td><td>Baseline</td><td><strong>+40%</strong> ตอบรับมากขึ้น</td></tr>
+              <tr><td>อัตราตกลงชำระ</td><td>Baseline</td><td><strong>+31%</strong></td></tr>
+              <tr><td>อัตราเก็บหนี้สำเร็จรวม</td><td>Baseline</td><td><strong>+25–35%</strong></td></tr>
+              <tr><td>ความเร็วในการเก็บ</td><td>Baseline</td><td><strong>เร็วขึ้น 35%</strong></td></tr>
+              <tr><td>ต้นทุนต่อบัญชี</td><td>฿500–800</td><td><strong>ลด 20–70%</strong></td></tr>
+              <tr><td>ข้อร้องเรียน compliance</td><td>Baseline</td><td><strong>−87%</strong></td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>จุดเด่น AI Rudder สำหรับเก็บหนี้:</strong></p>
+            <ul>
+              <li><strong>โทรได้ไม่จำกัด</strong> — ไม่คิดค่าต่อสาย โทรหาทุกบัญชีได้หลายครั้ง</li>
+              <li><strong>เลือกเวลาโทรอัตโนมัติ</strong> — บอทโทรเวลาที่ลูกหนี้รับได้ดีที่สุด</li>
+              <li><strong>ปรับโทนเสียง &amp; สคริปต์</strong> — เข้มสำหรับค้างชำระ, อ่อนสำหรับเตือนครั้งแรก</li>
+              <li><strong>จำกัดจำนวนการโทรอัตโนมัติ</strong> — ตั้ง max (เช่น 5 ครั้งใน 2 สัปดาห์ แล้วพัก) เพื่อ compliance</li>
+              <li><strong>ทำงาน 24/7</strong> — โทรช่วงเย็น/วันหยุดที่ลูกหนี้มักรับสาย</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">ตัวอย่าง Napkin Math</div>
+              <p>Portfolio: 10,000 บัญชี, เฉลี่ย ฿5,000 ต่อบัญชี<br>
+                เก็บได้ปัจจุบัน: 15% = 1,500 บัญชี = <strong>฿7.5 ล้าน</strong><br>
+                ด้วย AI (+30%): 19.5% = 1,950 บัญชี = <strong>฿9.75 ล้าน</strong><br>
+                <strong>เก็บได้เพิ่ม: ฿2.25 ล้าน/เดือน</strong><br>
+                แม้ AI Rudder แพงกว่า ฿500K/เดือน กำไรสุทธิเพิ่ม = <strong>฿1.75 ล้าน/เดือน</strong></p>
+            </div>
+
+            <div class="talk-track">"ทีมคุณติดต่อลูกหนี้ได้ 26% — ไม่ใช่เพราะเขาไม่ยอมจ่าย แต่เพราะติดต่อไม่ทัน บอทเราติดต่อได้มากกว่า 40% และเก็บหนี้ได้มากกว่า 25-35% แม้ค่าต่อนาทีจะสูงกว่า แต่ยอดเก็บหนี้ที่เพิ่มขึ้นเกินค่าใช้จ่ายที่เพิ่มมาก"</div>
+          </div>
+        </div>
+
+        <!-- LOGISTICS / COD -->
+        <div class="industry-card ic-logistics" id="impact-logistics">
+          <h4 class="en-heading">Logistics / COD (Cash on Delivery) Notifications</h4>
+          <h4 class="th-heading">ขนส่ง / การแจ้งเตือน COD (เก็บเงินปลายทาง)</h4>
+
+          <div class="en-block">
+            <div class="pain-point">10–15% of all deliveries fail on the first attempt. Each failed delivery costs <strong>฿500–600</strong> (re-delivery, warehouse, customer service). 58% of Thai consumers still use COD — a failed COD costs even more due to return-to-origin.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Without Proactive Notifications</th><th>With AI Notifications</th></tr>
+              <tr><td>Failed first-delivery rate</td><td>10–15%</td><td><strong>Reduced by 30–35%</strong></td></tr>
+              <tr><td>Inbound CS calls ("Where is my order?")</td><td>Baseline</td><td><strong>−40 to −60%</strong></td></tr>
+              <tr><td>Negative feedback from delays</td><td>Baseline</td><td><strong>−90%</strong> with proactive alerts</td></tr>
+              <tr><td>Customer satisfaction</td><td>Baseline</td><td>Significantly higher with updates</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>The "proactive vs reactive" story:</strong></p>
+            <ul>
+              <li>Without notifications: customer doesn't know delivery status → calls inbound CS → ties up agents → bad experience</li>
+              <li>With AI notifications: customer gets proactive call/SMS → confirms availability → delivery succeeds first time → no inbound call needed</li>
+              <li>For COD: bot can confirm intent to receive and pay before the driver dispatches, preventing wasted trips</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">Napkin Math Example</div>
+              <p>Monthly deliveries: 100,000. Failure rate: 12% = 12,000 failed deliveries.<br>
+                Cost per failure: ฿550 (re-delivery + CS + warehouse) = <strong>฿6.6M/month in losses</strong><br>
+                With AI notifications (−35% failures): 7,800 failures instead of 12,000<br>
+                <strong>Savings: 4,200 × ฿550 = ฿2.31M/month in avoided losses</strong><br>
+                Plus: inbound CS call reduction of 40% = additional payroll savings<br>
+                Bot cost: even at ฿300K–500K/month, <strong>net savings = ฿1.8M+/month</strong></p>
+            </div>
+
+            <div class="talk-track">"Your inbound call center is reacting to problems that could be prevented. Every failed delivery costs you ฿550. AI notifications prevent 35% of those failures and cut your inbound call volume in half. The question isn't whether you can afford the bot — it's how much you're losing without it."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">10–15% ของการจัดส่งทั้งหมดล้มเหลวในครั้งแรก แต่ละครั้งเสียค่าใช้จ่าย <strong>฿500–600</strong> (ส่งซ้ำ, คลัง, CS) 58% ของผู้บริโภคไทยยังใช้ COD — COD ที่ล้มเหลวยิ่งแพงกว่าเพราะต้องส่งคืนต้นทาง</div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>ไม่มี Notification อัตโนมัติ</th><th>มี AI Notification</th></tr>
+              <tr><td>อัตราจัดส่งล้มเหลวครั้งแรก</td><td>10–15%</td><td><strong>ลด 30–35%</strong></td></tr>
+              <tr><td>สาย Inbound CS ("พัสดุอยู่ไหน?")</td><td>Baseline</td><td><strong>ลด 40–60%</strong></td></tr>
+              <tr><td>Feedback เชิงลบจากความล่าช้า</td><td>Baseline</td><td><strong>ลด 90%</strong> ด้วยการแจ้งเตือนล่วงหน้า</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>เรื่อง "เชิงรุก vs เชิงรับ":</strong></p>
+            <ul>
+              <li>ไม่มี notification: ลูกค้าไม่รู้สถานะ → โทรมาถาม CS → เอเจนต์ติดสาย → ประสบการณ์แย่</li>
+              <li>มี AI notification: ลูกค้าได้โทร/SMS ล่วงหน้า → ยืนยันว่าอยู่บ้าน → ส่งสำเร็จครั้งแรก → ไม่ต้องโทรมา</li>
+              <li>สำหรับ COD: บอทยืนยันความตั้งใจรับและจ่ายก่อนส่ง ป้องกันการเดินทางเปล่า</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">ตัวอย่าง Napkin Math</div>
+              <p>จัดส่ง/เดือน: 100,000 ล้มเหลว 12% = 12,000 ครั้ง<br>
+                ค่าเสียหายต่อครั้ง: ฿550 = <strong>฿6.6 ล้าน/เดือนที่สูญเสีย</strong><br>
+                ด้วย AI notification (ลดความล้มเหลว 35%): เหลือ 7,800 ครั้ง<br>
+                <strong>ประหยัด: 4,200 × ฿550 = ฿2.31 ล้าน/เดือน</strong><br>
+                เพิ่มเติม: ลดสาย inbound CS 40% = ประหยัดค่าจ้างเพิ่ม<br>
+                ค่าบอท: แม้ ฿300K–500K/เดือน <strong>ประหยัดสุทธิ = ฿1.8 ล้าน+/เดือน</strong></p>
+            </div>
+
+            <div class="talk-track">"ศูนย์ CS ของคุณกำลังรับมือกับปัญหาที่ป้องกันได้ การจัดส่งล้มเหลวแต่ละครั้งเสียค่า ฿550 AI notification ป้องกันความล้มเหลวได้ 35% และลดสายโทรเข้าลงครึ่งหนึ่ง คำถามไม่ใช่ว่าจ่ายค่าบอทไหวไหม — แต่คือตอนนี้คุณสูญเสียเท่าไหร่โดยไม่มีมัน"</div>
+          </div>
+        </div>
+
+        <!-- TELEMARKETING -->
+        <div class="industry-card ic-telemarketing" id="impact-telemarketing">
+          <h4 class="en-heading">Telemarketing / Outbound Sales</h4>
+          <h4 class="th-heading">การตลาดโทรศัพท์ / งานขาย Outbound</h4>
+
+          <div class="en-block">
+            <div class="pain-point">Average cold call conversion rate is only <strong>2–5%</strong>. Manual agents make 50–80 calls/day. The bottleneck is volume — not the sales pitch.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Manual</th><th>With AI Assistance</th></tr>
+              <tr><td>Calls per day per agent</td><td>50–80</td><td><strong>150–250+</strong> (with dialer)</td></tr>
+              <tr><td>Lead-to-meeting rate</td><td>18%</td><td><strong>31%</strong> (with AI qualification)</td></tr>
+              <tr><td>Cost per qualified lead</td><td>Baseline</td><td><strong>25–50% lower</strong></td></tr>
+              <tr><td>Meaningful conversations/day</td><td>Baseline</td><td><strong>2–3× more</strong></td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>Where AI adds value in sales:</strong></p>
+            <ul>
+              <li><strong>AI pre-qualification</strong> — Bot calls the list first, qualifies leads, transfers only warm leads to human agents</li>
+              <li><strong>Higher volume</strong> — 3–5× more contacts per day means more opportunities in the pipeline</li>
+              <li><strong>Consistent follow-up</strong> — Bot never forgets to call back, follows up on schedule automatically</li>
+              <li><strong>Agent time optimization</strong> — Humans spend 100% of their time on qualified conversations, not dialing and waiting</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">Napkin Math Example</div>
+              <p>Current: 10 agents × 60 calls/day × 22 days = 13,200 calls/month<br>
+                Conversion 3% = 396 qualified leads at ฿1,500 cost per lead<br>
+                With AI pre-screening + dialer: same 10 agents reach 40,000 contacts/month<br>
+                AI qualifies 8,000, agents close 31% = 2,480 qualified leads<br>
+                <strong>6× more qualified leads with the same team size</strong></p>
+            </div>
+
+            <div class="talk-track">"Your sales agents spend 80% of their day dialing and waiting. With AI pre-qualification, they spend 100% talking to interested prospects. Same team, 6 times the pipeline."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">อัตราการ convert จาก cold call เฉลี่ยแค่ <strong>2–5%</strong> เอเจนต์โทรได้ 50–80 สาย/วัน คอขวดคือ volume ไม่ใช่สคริปต์ขาย</div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>Manual</th><th>มี AI ช่วย</th></tr>
+              <tr><td>สายต่อวันต่อเอเจนต์</td><td>50–80</td><td><strong>150–250+</strong> (มี dialer)</td></tr>
+              <tr><td>อัตรา lead เป็น meeting</td><td>18%</td><td><strong>31%</strong> (มี AI คัดกรอง)</td></tr>
+              <tr><td>ต้นทุนต่อ qualified lead</td><td>Baseline</td><td><strong>ลด 25–50%</strong></td></tr>
+              <tr><td>บทสนทนาที่มีความหมาย/วัน</td><td>Baseline</td><td><strong>เพิ่ม 2–3 เท่า</strong></td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>AI เพิ่มมูลค่าในงานขายอย่างไร:</strong></p>
+            <ul>
+              <li><strong>AI คัดกรองก่อน</strong> — บอทโทรรายชื่อก่อน คัดกรอง lead แล้วโอนเฉพาะ lead ที่สนใจให้คน</li>
+              <li><strong>Volume สูงขึ้น</strong> — ติดต่อได้มากกว่า 3–5 เท่าต่อวัน = โอกาสมากขึ้น</li>
+              <li><strong>Follow-up สม่ำเสมอ</strong> — บอทไม่ลืมโทรกลับ ติดตามตามตารางอัตโนมัติ</li>
+              <li><strong>เวลาเอเจนต์มีค่า</strong> — คนใช้ 100% ของเวลาคุยกับคนที่สนใจ ไม่ใช่กดเบอร์แล้วรอ</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">ตัวอย่าง Napkin Math</div>
+              <p>ปัจจุบัน: 10 เอเจนต์ × 60 สาย/วัน × 22 วัน = 13,200 สาย/เดือน<br>
+                Convert 3% = 396 qualified leads ต้นทุน ฿1,500/lead<br>
+                มี AI คัดกรอง + dialer: ทีมเดิมติดต่อ 40,000 ราย/เดือน<br>
+                AI คัดกรอง 8,000 ราย เอเจนต์ปิดได้ 31% = 2,480 qualified leads<br>
+                <strong>ได้ qualified leads มากกว่า 6 เท่า ด้วยทีมขนาดเดิม</strong></p>
+            </div>
+
+            <div class="talk-track">"เอเจนต์ขายของคุณใช้ 80% ของวันกดเบอร์แล้วรอ ด้วย AI คัดกรอง พวกเขาใช้ 100% คุยกับคนที่สนใจ ทีมเท่าเดิม pipeline มากกว่า 6 เท่า"</div>
+          </div>
+        </div>
+
+        <!-- KYC -->
+        <div class="industry-card ic-kyc" id="impact-kyc">
+          <h4 class="en-heading">KYC (Know Your Customer) / Identity Verification</h4>
+          <h4 class="th-heading">KYC (รู้จักลูกค้า) / ยืนยันตัวตน</h4>
+
+          <div class="en-block">
+            <div class="pain-point"><strong>67%</strong> of banks are losing clients due to slow KYC processes (up 19% from 2023). If onboarding takes more than 5 minutes, <strong>50%+ abandon</strong>.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Manual KYC</th><th>With AI Automation</th></tr>
+              <tr><td>Time per verification</td><td>2–3 days</td><td><strong>Under 5 minutes</strong></td></tr>
+              <tr><td>Cost per onboarding</td><td>Up to ฿15,000+</td><td><strong>฿3–60</strong> per check</td></tr>
+              <tr><td>Dropout/abandonment rate</td><td>37–80%</td><td><strong>~25%</strong> (well-optimized)</td></tr>
+              <tr><td>Customer acquisition increase</td><td>Baseline</td><td><strong>+250%</strong> (case study)</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>Where AI voice bots help with KYC:</strong></p>
+            <ul>
+              <li><strong>Automated reminder calls</strong> — "You started your application but haven't submitted your ID. Can I help you complete it now?"</li>
+              <li><strong>Document follow-up</strong> — Bot calls customers with incomplete submissions, walks them through the process</li>
+              <li><strong>Verification calls</strong> — Voice-based identity confirmation for additional security layer</li>
+              <li><strong>Compliance deadline reminders</strong> — Automated calls before KYC documents expire</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">Napkin Math Example</div>
+              <p>Monthly new applications: 5,000. Current completion rate: 60% (40% dropout).<br>
+                With AI reminders (+15% completion): 75% complete = 750 more customers/month<br>
+                If average customer lifetime value = ฿10,000:<br>
+                <strong>Additional revenue: 750 × ฿10,000 = ฿7.5M in future customer value/month</strong></p>
+            </div>
+
+            <div class="talk-track">"You're losing 40% of applicants during KYC because the process is slow or confusing. An automated follow-up call recovers a significant portion of those dropouts — each one is a customer worth ฿10,000+ to your business."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point"><strong>67%</strong> ของธนาคารสูญเสียลูกค้าเพราะ KYC ช้า (เพิ่มขึ้น 19% จากปี 2023) ถ้า onboarding ใช้เวลามากกว่า 5 นาที <strong>50%+ ทิ้งไป</strong></div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>KYC แบบ Manual</th><th>มี AI อัตโนมัติ</th></tr>
+              <tr><td>เวลาต่อการยืนยัน</td><td>2–3 วัน</td><td><strong>ไม่ถึง 5 นาที</strong></td></tr>
+              <tr><td>ต้นทุนต่อ onboarding</td><td>สูงถึง ฿15,000+</td><td><strong>฿3–60</strong> ต่อครั้ง</td></tr>
+              <tr><td>อัตรายกเลิก/ทิ้ง</td><td>37–80%</td><td><strong>~25%</strong> (ปรับแต่งดี)</td></tr>
+              <tr><td>การเพิ่มลูกค้าใหม่</td><td>Baseline</td><td><strong>+250%</strong> (กรณีศึกษา)</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>บอทเสียงช่วย KYC อย่างไร:</strong></p>
+            <ul>
+              <li><strong>โทรเตือนอัตโนมัติ</strong> — "คุณเริ่มสมัครแล้วแต่ยังไม่ส่งเอกสาร ให้ช่วยทำให้เสร็จตอนนี้ไหม?"</li>
+              <li><strong>ติดตามเอกสาร</strong> — บอทโทรหาลูกค้าที่ส่งเอกสารไม่ครบ แนะนำขั้นตอน</li>
+              <li><strong>โทรยืนยันตัวตน</strong> — ยืนยันด้วยเสียงเพื่อความปลอดภัยเพิ่ม</li>
+              <li><strong>เตือนก่อนเอกสารหมดอายุ</strong> — โทรอัตโนมัติก่อน KYC หมดอายุ</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">ตัวอย่าง Napkin Math</div>
+              <p>สมัครใหม่/เดือน: 5,000 ทำสำเร็จ 60% (40% ทิ้ง)<br>
+                มี AI เตือน (+15% สำเร็จ): 75% = มีลูกค้าเพิ่ม 750 คน/เดือน<br>
+                LTV เฉลี่ย ฿10,000/ลูกค้า:<br>
+                <strong>รายได้เพิ่ม: 750 × ฿10,000 = ฿7.5 ล้าน มูลค่าลูกค้า/เดือน</strong></p>
+            </div>
+
+            <div class="talk-track">"คุณสูญเสีย 40% ของผู้สมัครระหว่าง KYC เพราะช้าหรือสับสน การโทรติดตามอัตโนมัติดึงกลับมาได้จำนวนมาก แต่ละคนมีมูลค่า ฿10,000+ ให้ธุรกิจคุณ"</div>
+          </div>
+        </div>
+
+        <!-- APPOINTMENT REMINDERS -->
+        <div class="industry-card ic-appointments" id="impact-appointments">
+          <h4 class="en-heading">Appointment Reminders (Healthcare, Banking, Services)</h4>
+          <h4 class="th-heading">เตือนนัดหมาย (สาธารณสุข, ธนาคาร, บริการ)</h4>
+
+          <div class="en-block">
+            <div class="pain-point">No-show rates range from <strong>15–30%</strong> across industries (up to 45% for mental health). Each missed appointment costs <strong>฿3,000–7,000+</strong> in lost revenue and wasted resources. Total US healthcare no-show cost: $150 billion/year.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Without Reminders</th><th>With Automated Reminders</th></tr>
+              <tr><td>No-show rate</td><td>15–30%</td><td><strong>Reduced 30–60%</strong></td></tr>
+              <tr><td>Patient attendance likelihood</td><td>Baseline</td><td><strong>+23%</strong> more likely to attend</td></tr>
+              <tr><td>Staff time on manual calls</td><td>Hours/day</td><td><strong>Near zero</strong></td></tr>
+            </table>
+
+            <div class="napkin-math">
+              <div class="nm-label">Napkin Math Example</div>
+              <p>Clinic: 200 appointments/week. No-show rate: 20% = 40 missed/week.<br>
+                Revenue per appointment: ฿1,500. Weekly loss: <strong>฿60,000</strong><br>
+                With AI reminders (−45% no-shows): 22 missed instead of 40<br>
+                <strong>Recovered: 18 × ฿1,500 = ฿27,000/week = ฿108,000/month</strong></p>
+            </div>
+
+            <div class="talk-track">"You're losing ฿240,000 a month to no-shows. An automated reminder call the day before recovers nearly half of those — that's over ฿100,000/month in recovered revenue for a fraction of the cost."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">อัตรา no-show อยู่ที่ <strong>15–30%</strong> ในทุกอุตสาหกรรม (สูงถึง 45% สำหรับสุขภาพจิต) แต่ละนัดหมายที่พลาดเสียค่าเสียโอกาส <strong>฿3,000–7,000+</strong></div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>ไม่มีเตือน</th><th>มีเตือนอัตโนมัติ</th></tr>
+              <tr><td>อัตรา no-show</td><td>15–30%</td><td><strong>ลด 30–60%</strong></td></tr>
+              <tr><td>โอกาสที่ผู้ป่วยมา</td><td>Baseline</td><td><strong>+23%</strong> มาตามนัดมากขึ้น</td></tr>
+              <tr><td>เวลาพนักงานโทรเตือนเอง</td><td>หลายชั่วโมง/วัน</td><td><strong>เกือบศูนย์</strong></td></tr>
+            </table>
+
+            <div class="napkin-math">
+              <div class="nm-label">ตัวอย่าง Napkin Math</div>
+              <p>คลินิก: 200 นัด/สัปดาห์ No-show 20% = 40 ครั้ง/สัปดาห์<br>
+                รายได้ต่อนัด: ฿1,500 สูญเสีย/สัปดาห์: <strong>฿60,000</strong><br>
+                มี AI เตือน (ลด no-show 45%): เหลือ 22 ครั้งแทน 40<br>
+                <strong>กู้คืน: 18 × ฿1,500 = ฿27,000/สัปดาห์ = ฿108,000/เดือน</strong></p>
+            </div>
+
+            <div class="talk-track">"คุณสูญเสีย ฿240,000 ต่อเดือนจาก no-show การโทรเตือนอัตโนมัติก่อนนัดหมาย 1 วัน กู้คืนได้เกือบครึ่ง — นั่นคือกว่า ฿100,000/เดือนด้วยค่าใช้จ่ายเพียงเล็กน้อย"</div>
+          </div>
+        </div>
+
+        <!-- INSURANCE -->
+        <div class="industry-card ic-insurance" id="impact-insurance">
+          <h4 class="en-heading">Insurance (Policy Renewal &amp; Claims)</h4>
+          <h4 class="th-heading">ประกันภัย (ต่ออายุกรมธรรม์ &amp; เคลม)</h4>
+
+          <div class="en-block">
+            <div class="pain-point">Insurance lapse rate is <strong>7%</strong> and rising. <strong>80%</strong> of customers leave after a poor claims experience. But clients who talk to an agent before renewal are <strong>80% more likely to stay</strong>.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Without Proactive Outreach</th><th>With AI Outreach</th></tr>
+              <tr><td>Policy renewal rate</td><td>84% average</td><td><strong>+20%</strong> boost with proactive engagement</td></tr>
+              <tr><td>Claims resolution time</td><td>30 days</td><td><strong>7.5 days</strong> (−75%)</td></tr>
+              <tr><td>Customer satisfaction (claims)</td><td>Baseline</td><td><strong>+38%</strong></td></tr>
+              <tr><td>Customer retention</td><td>Baseline</td><td><strong>+35%</strong></td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>AI voice bot use cases for insurance:</strong></p>
+            <ul>
+              <li><strong>Renewal reminders</strong> — Automated calls 60–90 days before expiry, offer renewal options</li>
+              <li><strong>Claims status updates</strong> — Proactive updates so customers don't call in</li>
+              <li><strong>Cross-sell / upsell</strong> — Bot identifies opportunities during renewal conversations</li>
+              <li><strong>Lapsed policy win-back</strong> — Automated campaigns to re-engage lapsed customers</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">Napkin Math Example</div>
+              <p>Portfolio: 50,000 policies. Lapse rate: 7% = 3,500 lapsed/year.<br>
+                Average premium: ฿15,000/year. Revenue at risk: <strong>฿52.5M/year</strong><br>
+                With AI renewal calls (+20% retention): save 700 policies<br>
+                <strong>Retained revenue: 700 × ฿15,000 = ฿10.5M/year</strong><br>
+                A 5% improvement in retention boosts profit by 25–95% (industry data).</p>
+            </div>
+
+            <div class="talk-track">"You're losing 3,500 policyholders a year — ฿52 million in premium revenue. A proactive renewal call saves even 20% of those lapses, that's ฿10 million recovered. And customers who hear from you before renewal are 80% more likely to stay."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">อัตรา lapse ของประกันอยู่ที่ <strong>7%</strong> และเพิ่มขึ้น <strong>80%</strong> ของลูกค้าออกหลังจากประสบการณ์เคลมไม่ดี แต่ลูกค้าที่ได้คุยก่อนต่ออายุมีโอกาส <strong>80% มากกว่า</strong> ที่จะอยู่ต่อ</div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>ไม่มี Proactive Outreach</th><th>มี AI Outreach</th></tr>
+              <tr><td>อัตราต่ออายุกรมธรรม์</td><td>เฉลี่ย 84%</td><td><strong>เพิ่ม 20%</strong> ด้วย engagement เชิงรุก</td></tr>
+              <tr><td>เวลาดำเนินการเคลม</td><td>30 วัน</td><td><strong>7.5 วัน</strong> (−75%)</td></tr>
+              <tr><td>ความพึงพอใจลูกค้า (เคลม)</td><td>Baseline</td><td><strong>+38%</strong></td></tr>
+              <tr><td>รักษาลูกค้า</td><td>Baseline</td><td><strong>+35%</strong></td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>Use case ของบอทเสียงสำหรับประกัน:</strong></p>
+            <ul>
+              <li><strong>เตือนต่ออายุ</strong> — โทรอัตโนมัติ 60–90 วันก่อนหมดอายุ เสนอตัวเลือกต่ออายุ</li>
+              <li><strong>อัปเดตสถานะเคลม</strong> — แจ้งเชิงรุกเพื่อลูกค้าไม่ต้องโทรเข้ามาถาม</li>
+              <li><strong>Cross-sell / upsell</strong> — บอทระบุโอกาสระหว่างการสนทนาต่ออายุ</li>
+              <li><strong>ดึงลูกค้ากลับ</strong> — แคมเปญอัตโนมัติติดต่อลูกค้าที่หลุดไป</li>
+            </ul>
+
+            <div class="napkin-math">
+              <div class="nm-label">ตัวอย่าง Napkin Math</div>
+              <p>Portfolio: 50,000 กรมธรรม์ Lapse 7% = 3,500 รายหลุด/ปี<br>
+                เบี้ยเฉลี่ย: ฿15,000/ปี รายได้ที่เสี่ยง: <strong>฿52.5 ล้าน/ปี</strong><br>
+                ด้วย AI โทรต่ออายุ (+20% retention): รักษาได้ 700 ราย<br>
+                <strong>รายได้ที่รักษาไว้: 700 × ฿15,000 = ฿10.5 ล้าน/ปี</strong></p>
+            </div>
+
+            <div class="talk-track">"คุณสูญเสียผู้ถือกรมธรรม์ 3,500 รายต่อปี — ฿52 ล้านในเบี้ย การโทรต่ออายุเชิงรุกรักษาได้แม้แค่ 20% ก็เท่ากับ ฿10 ล้านที่กู้คืน และลูกค้าที่ได้ยินจากคุณก่อนต่ออายุมีโอกาส 80% มากกว่าที่จะอยู่ต่อ"</div>
+          </div>
+        </div>
+
+        <!-- SURVEYS -->
+        <div class="industry-card ic-surveys" id="impact-surveys">
+          <h4 class="en-heading">Customer Surveys / NPS</h4>
+          <h4 class="th-heading">แบบสำรวจลูกค้า / NPS</h4>
+
+          <div class="en-block">
+            <div class="pain-point">Email survey response rates have dropped to <strong>20–22%</strong>. Automated voice/IVR surveys get <strong>up to 3× higher</strong> response rates than email for transactional feedback.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Channel</th><th>Response Rate</th><th>Best For</th></tr>
+              <tr><td>Email surveys</td><td>20–22%</td><td>Detailed, multi-question surveys</td></tr>
+              <tr><td>SMS surveys (short)</td><td>45–60%</td><td>1–3 question NPS/CSAT</td></tr>
+              <tr><td>Automated voice/IVR</td><td>Up to 3× email</td><td>Post-interaction feedback</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>Value of higher survey response:</strong> More responses = more representative data = better business decisions. Companies with strong feedback loops see measurably higher customer retention.</p>
+
+            <div class="talk-track">"Your email surveys get a 20% response rate — that means 80% of your customers' opinions are invisible. An automated voice survey after each interaction captures 3× more feedback and gives you real data to act on."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">อัตราตอบแบบสำรวจทางอีเมลลดลงเหลือ <strong>20–22%</strong> แบบสำรวจเสียง/IVR อัตโนมัติมีอัตราตอบ<strong>สูงกว่า 3 เท่า</strong>ของอีเมล</div>
+
+            <table class="benchmark-table">
+              <tr><th>ช่องทาง</th><th>อัตราตอบ</th><th>เหมาะสำหรับ</th></tr>
+              <tr><td>แบบสำรวจอีเมล</td><td>20–22%</td><td>แบบสำรวจยาว หลายคำถาม</td></tr>
+              <tr><td>SMS (สั้น)</td><td>45–60%</td><td>NPS/CSAT 1–3 คำถาม</td></tr>
+              <tr><td>เสียง/IVR อัตโนมัติ</td><td>สูงถึง 3× อีเมล</td><td>Feedback หลังการบริการ</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>คุณค่าของอัตราตอบที่สูงขึ้น:</strong> ตอบมากขึ้น = ข้อมูลเป็นตัวแทนมากขึ้น = ตัดสินใจทางธุรกิจดีขึ้น บริษัทที่มี feedback loop ที่ดีมีอัตรารักษาลูกค้าสูงขึ้นอย่างชัดเจน</p>
+
+            <div class="talk-track">"แบบสำรวจอีเมลของคุณได้ 20% — หมายความว่า 80% ของความเห็นลูกค้ามองไม่เห็น แบบสำรวจเสียงอัตโนมัติจับ feedback ได้มากกว่า 3 เท่าและให้ข้อมูลจริงเพื่อปรับปรุง"</div>
+          </div>
+        </div>
+
+        <!-- FRAUD ALERTS -->
+        <div class="industry-card ic-fraud" id="impact-fraud">
+          <h4 class="en-heading">Fraud Alerts / Security Notifications</h4>
+          <h4 class="th-heading">แจ้งเตือนทุจริต / การแจ้งเตือนด้านความปลอดภัย</h4>
+
+          <div class="en-block">
+            <div class="pain-point">Global banking fraud costs exceed <strong>$45 billion/year</strong>. AI detects fraud in <strong>200–300 milliseconds</strong> vs hours for legacy systems. Every second of delay increases losses.</div>
+
+            <table class="benchmark-table">
+              <tr><th>Metric</th><th>Legacy Systems</th><th>With AI Automation</th></tr>
+              <tr><td>Fraud detection speed</td><td>Hours (batch processing)</td><td><strong>200–300 ms</strong></td></tr>
+              <tr><td>Fraud loss reduction</td><td>Baseline</td><td><strong>Up to −60%</strong></td></tr>
+              <tr><td>False positive reduction</td><td>Up to 90% false positives</td><td><strong>Reduced 50–70%</strong></td></tr>
+              <tr><td>Scam detection rates</td><td>Baseline</td><td><strong>+300%</strong> (Mastercard case)</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>Where AI voice bots help:</strong></p>
+            <ul>
+              <li><strong>Instant alert calls</strong> — Bot calls customer within seconds of suspicious transaction for confirmation</li>
+              <li><strong>Card freeze/unfreeze</strong> — Voice-confirmed actions, no app download needed</li>
+              <li><strong>Reduced false positive burden</strong> — Bot handles initial verification, only escalates confirmed issues to human agents</li>
+            </ul>
+
+            <div class="talk-track">"When fraud happens, every minute matters. An automated alert call within 30 seconds of a suspicious transaction can prevent losses that a 2-hour delay cannot. The cost of the call is nothing compared to the fraud it prevents."</div>
+          </div>
+
+          <div class="thai-block">
+            <div class="pain-point">ค่าเสียหายจากการทุจริตธนาคารทั่วโลกเกิน <strong>$45 พันล้าน/ปี</strong> AI ตรวจจับใน <strong>200–300 มิลลิวินาที</strong> เทียบกับหลายชั่วโมงของระบบเดิม ทุกวินาทีที่ช้าเพิ่มความเสียหาย</div>
+
+            <table class="benchmark-table">
+              <tr><th>ตัวชี้วัด</th><th>ระบบเดิม</th><th>มี AI อัตโนมัติ</th></tr>
+              <tr><td>ความเร็วตรวจจับ</td><td>หลายชั่วโมง (batch)</td><td><strong>200–300 ms</strong></td></tr>
+              <tr><td>ลดความสูญเสียจากทุจริต</td><td>Baseline</td><td><strong>ลดสูงถึง 60%</strong></td></tr>
+              <tr><td>ลด false positive</td><td>สูงถึง 90% false positive</td><td><strong>ลด 50–70%</strong></td></tr>
+              <tr><td>อัตราตรวจจับ scam</td><td>Baseline</td><td><strong>+300%</strong> (กรณี Mastercard)</td></tr>
+            </table>
+
+            <p style="margin-top: 10px;"><strong>บอทเสียงช่วยอย่างไร:</strong></p>
+            <ul>
+              <li><strong>โทรแจ้งเตือนทันที</strong> — บอทโทรหาลูกค้าภายในวินาทีหลังธุรกรรมน่าสงสัยเพื่อยืนยัน</li>
+              <li><strong>อายัด/ปลดอายัดบัตร</strong> — ยืนยันด้วยเสียง ไม่ต้องดาวน์โหลดแอป</li>
+              <li><strong>ลดภาระ false positive</strong> — บอทยืนยันเบื้องต้น ส่งต่อเฉพาะกรณีจริงให้คน</li>
+            </ul>
+
+            <div class="talk-track">"เมื่อเกิดทุจริต ทุกนาทีสำคัญ การโทรแจ้งเตือนอัตโนมัติภายใน 30 วินาทีหลังธุรกรรมน่าสงสัยป้องกันความเสียหายที่การรอ 2 ชั่วโมงทำไม่ได้ ค่าโทรไม่สำคัญเทียบกับความเสียหายที่ป้องกันได้"</div>
+          </div>
+        </div>
+
+        <!-- BENCHMARK SUMMARY TABLE -->
+        <h3 class="en-heading" style="margin-top: 24px;">Quick Benchmark Summary</h3>
+        <h3 class="th-heading" style="margin-top: 24px;">สรุป Benchmark ด่วน</h3>
+        <div class="en-block">
+          <table class="benchmark-table">
+            <tr>
+              <th>Industry</th>
+              <th>Key Pain Point</th>
+              <th>AI Impact</th>
+              <th>Primary Value</th>
+            </tr>
+            <tr>
+              <td><strong>Collections</strong></td>
+              <td>Only 26% of debtors reached</td>
+              <td>+40% contact, +31% agreement</td>
+              <td>Revenue (more recovered)</td>
+            </tr>
+            <tr>
+              <td><strong>Logistics/COD</strong></td>
+              <td>10-15% delivery failure</td>
+              <td>−35% failures, −40-60% inbound CS</td>
+              <td>Cost avoidance + CX</td>
+            </tr>
+            <tr>
+              <td><strong>Telemarketing</strong></td>
+              <td>2-5% cold call conversion</td>
+              <td>6× more qualified leads</td>
+              <td>Revenue (more pipeline)</td>
+            </tr>
+            <tr>
+              <td><strong>KYC</strong></td>
+              <td>37-80% abandonment</td>
+              <td>+250% customer acquisition</td>
+              <td>Revenue (more customers)</td>
+            </tr>
+            <tr>
+              <td><strong>Appointments</strong></td>
+              <td>15-30% no-show rate</td>
+              <td>−30-60% no-shows</td>
+              <td>Revenue (recovered slots)</td>
+            </tr>
+            <tr>
+              <td><strong>Insurance</strong></td>
+              <td>7% policy lapse rate</td>
+              <td>+20% renewal, +35% retention</td>
+              <td>Revenue (retained premium)</td>
+            </tr>
+            <tr>
+              <td><strong>Surveys</strong></td>
+              <td>20% email response rate</td>
+              <td>3× more responses</td>
+              <td>Data quality</td>
+            </tr>
+            <tr>
+              <td><strong>Fraud</strong></td>
+              <td>Hours to detect/notify</td>
+              <td>300ms detection, −60% losses</td>
+              <td>Loss prevention</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="thai-block">
+          <table class="benchmark-table">
+            <tr>
+              <th>อุตสาหกรรม</th>
+              <th>ปัญหาหลัก</th>
+              <th>ผลกระทบ AI</th>
+              <th>มูลค่าหลัก</th>
+            </tr>
+            <tr>
+              <td><strong>เก็บหนี้</strong></td>
+              <td>ติดต่อลูกหนี้ได้แค่ 26%</td>
+              <td>+40% ติดต่อได้, +31% ตกลงจ่าย</td>
+              <td>รายได้ (เก็บได้มากขึ้น)</td>
+            </tr>
+            <tr>
+              <td><strong>ขนส่ง/COD</strong></td>
+              <td>ส่งล้มเหลว 10-15%</td>
+              <td>ลดล้มเหลว 35%, ลด CS 40-60%</td>
+              <td>หลีกเลี่ยงต้นทุน + CX</td>
+            </tr>
+            <tr>
+              <td><strong>Telemarketing</strong></td>
+              <td>Cold call convert 2-5%</td>
+              <td>Qualified leads มากกว่า 6 เท่า</td>
+              <td>รายได้ (pipeline มากขึ้น)</td>
+            </tr>
+            <tr>
+              <td><strong>KYC</strong></td>
+              <td>ทิ้ง 37-80%</td>
+              <td>ลูกค้าเพิ่ม +250%</td>
+              <td>รายได้ (ลูกค้ามากขึ้น)</td>
+            </tr>
+            <tr>
+              <td><strong>นัดหมาย</strong></td>
+              <td>No-show 15-30%</td>
+              <td>ลด no-show 30-60%</td>
+              <td>รายได้ (กู้คืนนัดหมาย)</td>
+            </tr>
+            <tr>
+              <td><strong>ประกัน</strong></td>
+              <td>Lapse rate 7%</td>
+              <td>+20% ต่ออายุ, +35% รักษาลูกค้า</td>
+              <td>รายได้ (รักษาเบี้ย)</td>
+            </tr>
+            <tr>
+              <td><strong>แบบสำรวจ</strong></td>
+              <td>ตอบอีเมล 20%</td>
+              <td>ตอบมากขึ้น 3 เท่า</td>
+              <td>คุณภาพข้อมูล</td>
+            </tr>
+            <tr>
+              <td><strong>ทุจริต</strong></td>
+              <td>ตรวจจับ/แจ้งเตือนใช้เวลาหลายชม.</td>
+              <td>ตรวจจับ 300ms, ลดสูญเสีย 60%</td>
+              <td>ป้องกันความเสียหาย</td>
+            </tr>
+          </table>
+        </div>
+
+        <p class="benchmark-source" style="margin-top: 12px;"><span class="en-text">Sources: Gartner, McKinsey, TrueAccord, Freshworks, Fenergo, ContactBabel, J.D. Power, Mastercard, various industry reports 2023–2026. See individual sections for specific citations.</span><span class="th-text">แหล่งข้อมูล: Gartner, McKinsey, TrueAccord, Freshworks, Fenergo, ContactBabel, J.D. Power, Mastercard และรายงานอุตสาหกรรมต่างๆ 2023–2026 ดูรายละเอียดในแต่ละส่วน</span></p>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION 8: FAQ ===== -->
+    <div class="guide-section" id="faq">
+      <div class="card">
+        <h2 class="en-heading">8. Frequently Asked Questions</h2>
+        <h2 class="th-heading">8. คำถามที่พบบ่อย</h2>
+
+        <div class="en-block">
+          <div class="faq-item">
+            <div class="faq-q">What if the client has multiple channels (e.g., Voice + SMS)?</div>
+            <div class="faq-a">Click "Add Channel" to add more channels. Each channel gets its own volume and rate. The calculator adds them all up automatically.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">What if the bot is faster than humans?</div>
+            <div class="faq-a">Set the AI Handle Time to a lower number than the human Avg Handle Time. For example, if humans take 3 minutes per call but the bot finishes in 1 minute, enter 1. This reduces the AI cost per call.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">What if we want to offer a discount or credit?</div>
+            <div class="faq-a">Add an Additional Cost item on the AI Rudder side with a <strong>negative amount</strong>. For example, add "First Year Discount" with amount -100,000 and frequency "Yearly". This reduces the AI Rudder total.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">How do I save my work?</div>
+            <div class="faq-a">Click the <strong>Save</strong> button in the calculator header. Give your scenario a name (e.g., "Company X - Bot Only"). To reload it later, use the dropdown and click <strong>Load</strong>. Scenarios are stored in your browser.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">What does "Per Agent" frequency mean in Additional Costs?</div>
+            <div class="faq-a">It means the cost is multiplied by the number of retained agents. For example, if you add a ฿500/agent software license on the AI Rudder side, and deflection drops agents from 100 to 80, the cost is ฿500 × 80 = ฿40,000/month. As you increase deflection, this cost goes down.</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">What if there's no break-even?</div>
+            <div class="faq-a">If AI Rudder costs more than the current state (no savings), or if the initial investment is too high to recoup within 24 months, the Break-Even field will show "–". Adjust your rates or deflection to improve the numbers.</div>
+          </div>
+        </div>
+
+        <div class="thai-block">
+          <div class="faq-item">
+            <div class="faq-q">ถ้าลูกค้ามีหลายช่องทาง (เช่น Voice + SMS)?</div>
+            <div class="faq-a">กด "Add Channel" เพื่อเพิ่มช่องทาง แต่ละช่องทางมี volume และ rate ของตัวเอง ระบบจะรวมทั้งหมดอัตโนมัติ</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">ถ้าบอทเร็วกว่าคน?</div>
+            <div class="faq-a">ตั้ง AI Handle Time ให้น้อยกว่า Avg Handle Time ของคน เช่น ถ้าคนใช้เวลา 3 นาทีต่อสาย แต่บอทจบใน 1 นาที ให้กรอก 1 จะทำให้ต้นทุน AI ต่อสายลดลง</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">ถ้าเราจะให้ส่วนลดหรือเครดิต?</div>
+            <div class="faq-a">เพิ่ม Additional Cost ฝั่ง AI Rudder ด้วย<strong>จำนวนเงินติดลบ</strong> เช่น เพิ่ม "ส่วนลดปีแรก" จำนวน -100,000 ความถี่ "Yearly" ซึ่งจะลดยอดรวมฝั่ง AI Rudder</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">บันทึกงานยังไง?</div>
+            <div class="faq-a">กดปุ่ม <strong>Save</strong> ที่ header ของเครื่องคิดเลข ตั้งชื่อสถานการณ์ (เช่น "บริษัท X - Bot Only") ถ้าจะโหลดกลับมา ใช้ dropdown แล้วกด <strong>Load</strong> สถานการณ์เก็บในเบราว์เซอร์</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">"Per Agent" ใน Additional Costs หมายความว่ายังไง?</div>
+            <div class="faq-a">หมายความว่าค่าใช้จ่ายจะคูณด้วยจำนวนเอเจนต์ที่เหลือ เช่น ถ้าเพิ่มค่า license ซอฟต์แวร์ ฿500/เอเจนต์ ฝั่ง AI Rudder และ deflection ลดเอเจนต์จาก 100 เหลือ 80 ค่าใช้จ่ายจะเป็น ฿500 × 80 = ฿40,000/เดือน ยิ่ง deflection สูงขึ้น ค่านี้ยิ่งลดลง</div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q">ถ้าไม่มีจุดคุ้มทุน?</div>
+            <div class="faq-a">ถ้า AI Rudder แพงกว่าสถานะปัจจุบัน (ไม่มีประหยัด) หรือค่า setup สูงเกินกว่าจะคืนทุนใน 24 เดือน ช่อง Break-Even จะแสดง "–" ปรับ rate หรือ deflection เพื่อให้ตัวเลขดีขึ้น</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div style="text-align: center; padding: 16px; color: var(--muted-text); font-size: 13px;">
+      <a href="index.html" style="color: var(--brand-blue); text-decoration: none; font-weight: 500;"><span class="en-text">Open Calculator</span><span class="th-text">เปิดเครื่องคิดเลข</span></a>
+    </div>
+
+    </div><!-- /guide-container -->
+  </div><!-- /guide-layout -->
+
+  <script>
+    /* Language toggle */
+    function setLang(lang) {
+      document.body.classList.remove('lang-en', 'lang-th');
+      document.body.classList.add('lang-' + lang);
+      document.querySelectorAll('.lang-toggle button').forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+      document.getElementById('lang' + lang.charAt(0).toUpperCase() + lang.slice(1)).classList.add('active');
+    }
+
+    /* TOC active section highlighting */
+    (function() {
+      var tocLinks = document.querySelectorAll('.guide-toc a');
+      var sections = [];
+      tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+
+      function updateActive() {
+        var scrollY = window.scrollY + 100;
+        var active = null;
+        for (var i = sections.length - 1; i >= 0; i--) {
+          if (sections[i].el.offsetTop <= scrollY) {
+            active = sections[i];
+            break;
+          }
+        }
+        tocLinks.forEach(function(l) { l.classList.remove('active'); });
+        if (active) active.link.classList.add('active');
+      }
+
+      window.addEventListener('scroll', updateActive, { passive: true });
+      updateActive();
+
+      /* Smooth scroll on TOC click */
+      tocLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          var id = this.getAttribute('href').slice(1);
+          var target = document.getElementById(id);
+          if (target) {
+            window.scrollTo({ top: target.offsetTop - 20, behavior: 'smooth' });
+          }
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>

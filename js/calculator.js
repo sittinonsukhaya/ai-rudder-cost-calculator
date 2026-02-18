@@ -1,12 +1,11 @@
 /**
- * AI Rudder Cost Calculator - Pure Calculation Functions
+ * AI Rudder Cost Calculator - Pure Calculation Functions (ES Module)
  *
- * This module contains all calculation logic with no DOM dependencies.
- * All functions are pure and testable.
+ * All functions are pure and testable. No DOM dependencies.
+ * The only i18n dependency is in generateROITimeline for month labels.
  */
 
-// Create global AIRudder namespace
-window.AIRudder = window.AIRudder || {};
+import { t } from './i18n.js';
 
 /**
  * Calculate retained agents after deflection
@@ -14,11 +13,11 @@ window.AIRudder = window.AIRudder || {};
  * @param {number} deflectionRate - Deflection rate (0-1)
  * @returns {number} - Retained agents (rounded up conservatively)
  */
-AIRudder.calculateRetainedAgents = function(totalAgents, deflectionRate) {
+export function calculateRetainedAgents(totalAgents, deflectionRate) {
   const total = totalAgents || 0;
   const rate = deflectionRate || 0;
   const retained = total * (1 - rate);
-  return Math.ceil(retained); // Conservative rounding
+  return Math.ceil(retained);
 }
 
 /**
@@ -27,32 +26,64 @@ AIRudder.calculateRetainedAgents = function(totalAgents, deflectionRate) {
  * @param {number} hourlyRate - Hourly rate for admin time
  * @returns {number} - Monthly value of admin hours saved
  */
-AIRudder.calculateAdminValue = function(hoursPerMonth, hourlyRate) {
+export function calculateAdminValue(hoursPerMonth, hourlyRate) {
   const hours = hoursPerMonth || 0;
   const rate = hourlyRate || 0;
   return hours * rate;
 }
 
 /**
- * Calculate ledger totals from dynamic cost items
- * @param {Array} items - Array of cost items {name, amount, frequency, category}
- * @param {Object} globalParams - {volume, humanTime, aiTime, totalAgents, deflectionRate}
- * @returns {Object} - {capex: number, monthlyOpex: number}
+ * Calculate costs from channel rates
+ * AI costs are split by deflection rate:
+ *   - Bot-handled volume uses aiBot rate (+ aiHandleTime for voice)
+ *   - Agent-handled volume uses aiAgent rate (+ humanHandleTime for voice)
+ * @param {Array} channels - [{id, type, volume, humanHandleTime}]
+ * @param {Object} rates - {channelId: {client, aiBot, aiAgent}}
+ * @param {number} aiHandleTime - AI handle time for voice (bot-handled calls)
+ * @param {number} deflectionRate - Fraction of volume handled by AI bot (0-1)
+ * @returns {Object} - {clientTotal, aiTotal}
  */
-AIRudder.calculateLedgerTotals = function(items, globalParams = {}) {
+export function calculateChannelCosts(channels, rates, aiHandleTime, deflectionRate = 0) {
+  let clientTotal = 0;
+  let aiTotal = 0;
+  const dr = deflectionRate || 0;
+
+  (channels || []).forEach(channel => {
+    const rate = (rates || {})[channel.id] || { client: 0, aiBot: 0, aiAgent: 0 };
+    const volume = channel.volume || 0;
+    const botVolume = volume * dr;
+    const agentVolume = volume * (1 - dr);
+
+    if (channel.type === 'voice') {
+      clientTotal += rate.client * volume * (channel.humanHandleTime || 0);
+      // Bot calls: shorter AI handle time
+      aiTotal += rate.aiBot * botVolume * (aiHandleTime || 0);
+      // Agent calls: original human handle time
+      aiTotal += rate.aiAgent * agentVolume * (channel.humanHandleTime || 0);
+    } else {
+      // SMS (per message) and Chat (per session)
+      clientTotal += rate.client * volume;
+      aiTotal += rate.aiBot * botVolume + rate.aiAgent * agentVolume;
+    }
+  });
+
+  return { clientTotal, aiTotal };
+}
+
+/**
+ * Calculate ledger totals from dynamic cost items
+ * Handles: one-time, monthly, yearly, per-agent
+ * @param {Array} items - [{id, name, amount, frequency}]
+ * @param {Object} params - {totalAgents, deflectionRate}
+ * @returns {Object} - {capex, monthlyOpex}
+ */
+export function calculateLedgerTotals(items, params = {}) {
   if (!items || items.length === 0) {
     return { capex: 0, monthlyOpex: 0 };
   }
 
-  const {
-    volume = 0,
-    humanTime = 0,
-    aiTime = 0,
-    totalAgents = 0,
-    deflectionRate = 0
-  } = globalParams;
-
-  const retainedAgents = AIRudder.calculateRetainedAgents(totalAgents, deflectionRate);
+  const { totalAgents = 0, deflectionRate = 0 } = params;
+  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
 
   let capex = 0;
   let monthlyOpex = 0;
@@ -74,17 +105,6 @@ AIRudder.calculateLedgerTotals = function(items, globalParams = {}) {
         monthlyOpex += amount / 12;
         break;
 
-      case 'per minute':
-        // Use humanTime for client side, aiTime for AI side
-        // This is handled by caller passing correct time
-        const handleTime = item.isAISide ? aiTime : humanTime;
-        monthlyOpex += amount * volume * handleTime;
-        break;
-
-      case 'per session':
-        monthlyOpex += amount * volume;
-        break;
-
       case 'per agent':
         monthlyOpex += amount * retainedAgents;
         break;
@@ -99,43 +119,39 @@ AIRudder.calculateLedgerTotals = function(items, globalParams = {}) {
 }
 
 /**
- * Calculate monthly costs for both sides
- * @param {Array} clientItems - Client current state items
- * @param {Array} aiItems - AI Rudder solution items
- * @param {Object} globalParams - Global parameters
- * @returns {Object} - {clientMonthly, aiMonthly, clientCapex, aiCapex, agentsReplaced, retainedAgents, adminValue}
+ * Calculate monthly costs combining channel costs + ledger costs
+ * @param {Array} channels - Channel definitions
+ * @param {Object} rates - Channel rates keyed by channel id
+ * @param {number} aiHandleTime - Shared AI handle time for voice
+ * @param {Array} clientItems - Client additional cost items
+ * @param {Array} aiItems - AI additional cost items
+ * @param {Object} params - {totalAgents, monthlySalary, deflectionRate, adminHours, hourlyRate}
+ * @returns {Object}
  */
-AIRudder.calculateMonthlyCosts = function(clientItems, aiItems, globalParams) {
-  const params = globalParams || {};
+export function calculateMonthlyCosts(channels, rates, aiHandleTime,
+                                       clientItems, aiItems, params) {
+  const p = params || {};
 
-  // Mark items with their side for per-minute calculations
-  const clientItemsWithSide = (clientItems || []).map(item => ({
-    ...item,
-    isAISide: false
-  }));
+  const channelCosts = calculateChannelCosts(channels, rates, aiHandleTime, p.deflectionRate);
+  const clientLedger = calculateLedgerTotals(clientItems, p);
+  const aiLedger = calculateLedgerTotals(aiItems, p);
 
-  const aiItemsWithSide = (aiItems || []).map(item => ({
-    ...item,
-    isAISide: true
-  }));
-
-  const clientTotals = AIRudder.calculateLedgerTotals(clientItemsWithSide, params);
-  const aiTotals = AIRudder.calculateLedgerTotals(aiItemsWithSide, params);
-
-  const totalAgents = params.totalAgents || 0;
-  const deflectionRate = params.deflectionRate || 0;
-  const retainedAgents = AIRudder.calculateRetainedAgents(totalAgents, deflectionRate);
+  const totalAgents = p.totalAgents || 0;
+  const deflectionRate = p.deflectionRate || 0;
+  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
   const agentsReplaced = totalAgents - retainedAgents;
 
-  const adminHours = params.adminHours || 0;
-  const hourlyRate = params.hourlyRate || 0;
-  const adminValue = AIRudder.calculateAdminValue(adminHours, hourlyRate);
+  const adminHours = p.adminHours || 0;
+  const hourlyRate = p.hourlyRate || 0;
+  const adminValue = calculateAdminValue(adminHours, hourlyRate);
+
+  const monthlySalary = p.monthlySalary || 0;
 
   return {
-    clientMonthly: clientTotals.monthlyOpex,
-    aiMonthly: aiTotals.monthlyOpex,
-    clientCapex: clientTotals.capex,
-    aiCapex: aiTotals.capex,
+    clientMonthly: channelCosts.clientTotal + clientLedger.monthlyOpex + (totalAgents * monthlySalary),
+    aiMonthly: channelCosts.aiTotal + aiLedger.monthlyOpex + (retainedAgents * monthlySalary),
+    clientCapex: clientLedger.capex,
+    aiCapex: aiLedger.capex,
     agentsReplaced,
     retainedAgents,
     adminValue
@@ -149,7 +165,7 @@ AIRudder.calculateMonthlyCosts = function(clientItems, aiItems, globalParams) {
  * @param {number} legacyLicenseCost - Monthly license cost per agent (optional)
  * @returns {number} - Monthly payroll saved
  */
-AIRudder.calculatePayrollSaved = function(agentsReplaced, monthlySalary, legacyLicenseCost = 0) {
+export function calculatePayrollSaved(agentsReplaced, monthlySalary, legacyLicenseCost = 0) {
   const agents = agentsReplaced || 0;
   const salary = monthlySalary || 0;
   const license = legacyLicenseCost || 0;
@@ -158,76 +174,55 @@ AIRudder.calculatePayrollSaved = function(agentsReplaced, monthlySalary, legacyL
 
 /**
  * Generate 24-month cumulative ROI timeline
+ * Shows DIRECT operational costs only (no payroll/admin offsets).
+ * Both lines always go up, making the chart intuitive.
+ * Payroll and admin savings are shown in dashboard metrics instead.
  * @param {number} clientMonthly - Client monthly OpEx
  * @param {number} aiMonthly - AI monthly OpEx
  * @param {number} clientCapex - Client CapEx
  * @param {number} aiCapex - AI CapEx
- * @param {number} adminValue - Monthly admin hours value (benefit offset)
- * @returns {Object} - {labels, clientData, aiData, breakEvenMonth}
+ * @returns {Object} - {labels, clientData, aiData}
  */
-AIRudder.generateROITimeline = function(clientMonthly, aiMonthly, clientCapex, aiCapex, adminValue = 0) {
+export function generateROITimeline(clientMonthly, aiMonthly, clientCapex, aiCapex) {
   const labels = [];
   const clientData = [];
   const aiData = [];
-  let breakEvenMonth = null;
-
-  const effectiveAIMonthly = aiMonthly - adminValue;
 
   for (let month = 0; month <= 24; month++) {
-    labels.push(`Month ${month}`);
-
-    // Cumulative costs
-    const clientCumulative = clientCapex + (clientMonthly * month);
-    const aiCumulative = aiCapex + (effectiveAIMonthly * month);
-
-    clientData.push(clientCumulative);
-    aiData.push(aiCumulative);
-
-    // Detect break-even point (first time AI becomes cheaper)
-    if (breakEvenMonth === null && month > 0 && aiCumulative < clientCumulative) {
-      breakEvenMonth = month;
-    }
+    labels.push(t('chart.month').replace('{n}', month));
+    clientData.push(clientCapex + (clientMonthly * month));
+    aiData.push(aiCapex + (aiMonthly * month));
   }
 
-  return {
-    labels,
-    clientData,
-    aiData,
-    breakEvenMonth
-  };
+  return { labels, clientData, aiData };
 }
 
 /**
  * Calculate dashboard metrics
- * @param {number} clientMonthly - Client monthly OpEx
- * @param {number} aiMonthly - AI monthly OpEx
+ * clientMonthly and aiMonthly already include agent payroll,
+ * so payroll savings emerge naturally from the difference.
+ * Admin value is an additional efficiency gain added to savings.
+ * @param {number} clientMonthly - Client total monthly spend (channels + payroll + additional)
+ * @param {number} aiMonthly - AI total monthly spend (channels + retained payroll + additional)
  * @param {number} clientCapex - Client CapEx
  * @param {number} aiCapex - AI CapEx
- * @param {number} adminValue - Monthly admin hours value
- * @param {number} payrollSaved - Monthly payroll saved from deflection
- * @returns {Object} - {initialInvestment, monthlySavings, payrollSaved, year1NetSavings, breakEvenMonth}
+ * @param {number} adminValue - Monthly admin hours value (efficiency gain)
+ * @returns {Object}
  */
-AIRudder.calculateDashboardMetrics = function(
-  clientMonthly,
-  aiMonthly,
-  clientCapex,
-  aiCapex,
-  adminValue,
-  payrollSaved
+export function calculateDashboardMetrics(
+  clientMonthly, aiMonthly, clientCapex, aiCapex, adminValue
 ) {
-  const effectiveAIMonthly = aiMonthly - adminValue;
-  const monthlySavings = clientMonthly - effectiveAIMonthly;
+  // Monthly savings = cost difference + admin efficiency
+  const monthlySavings = (clientMonthly - aiMonthly) + (adminValue || 0);
 
-  // Year 1 = 12 months of operations
   const year1ClientTotal = clientCapex + (clientMonthly * 12);
-  const year1AITotal = aiCapex + (effectiveAIMonthly * 12);
+  const year1AITotal = aiCapex + ((aiMonthly - (adminValue || 0)) * 12);
   const year1NetSavings = year1ClientTotal - year1AITotal;
 
-  // Find break-even month
   let breakEvenMonth = null;
   for (let month = 1; month <= 24; month++) {
     const clientCumulative = clientCapex + (clientMonthly * month);
-    const aiCumulative = aiCapex + (effectiveAIMonthly * month);
+    const aiCumulative = aiCapex + ((aiMonthly - (adminValue || 0)) * month);
 
     if (aiCumulative < clientCumulative) {
       breakEvenMonth = month;
@@ -235,10 +230,17 @@ AIRudder.calculateDashboardMetrics = function(
     }
   }
 
+  // Cost Reduction = Monthly Savings / Client Monthly × 100
+  const costReduction = clientMonthly > 0
+    ? Math.round((monthlySavings / clientMonthly) * 100)
+    : 0;
+
   return {
-    initialInvestment: aiCapex,
+    clientMonthly,
+    aiMonthly,
     monthlySavings,
-    payrollSaved,
+    costReduction,
+    initialInvestment: aiCapex,
     year1NetSavings,
     breakEvenMonth
   };
@@ -249,7 +251,7 @@ AIRudder.calculateDashboardMetrics = function(
  * @param {number} value - Numeric value
  * @returns {string} - Formatted currency string
  */
-AIRudder.formatCurrency = function(value) {
+export function formatCurrency(value) {
   return new Intl.NumberFormat('th-TH', {
     style: 'currency',
     currency: 'THB',
@@ -263,7 +265,7 @@ AIRudder.formatCurrency = function(value) {
  * @param {number} value - Numeric value
  * @returns {string} - Formatted number string
  */
-AIRudder.formatNumber = function(value) {
+export function formatNumber(value) {
   return new Intl.NumberFormat('th-TH', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
