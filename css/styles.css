@@ -571,7 +571,8 @@ input:focus, select:focus {
   font-size: 26px;
   font-weight: 700;
   color: var(--slate-900);
-  margin: 6px 0 0;
+  margin: auto 0 0;
+  padding-top: 6px;
 }
 
 .metric-value.savings { color: var(--savings-green); }
