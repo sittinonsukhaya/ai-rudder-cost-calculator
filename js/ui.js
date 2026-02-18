@@ -110,12 +110,10 @@ export function renderChannels(container, channels) {
  * Render rates comparison table in Section 2
  * Adds numbered labels when multiple channels of the same type exist
  */
-export function renderRates(container, channels, rates, aiHandleTime, chatAiHandleTime) {
+export function renderRates(container, channels, rates) {
   if (!container) return;
 
   const channelTypes = getChannelTypes();
-  const hasVoice = channels.some(c => c.type === 'voice');
-  const hasChat = channels.some(c => c.type === 'chat');
 
   if (channels.length === 0) {
     container.innerHTML = `<p style="color: var(--muted-text); font-size: 14px;">${t('misc.noChannels')}</p>`;
@@ -177,34 +175,6 @@ export function renderRates(container, channels, rates, aiHandleTime, chatAiHand
   });
 
   html += '</tbody></table>';
-
-  if (hasVoice || hasChat) {
-    html += '<div class="grid-2" style="margin-top: 16px;">';
-    if (hasVoice) {
-      html += `
-        <div class="field-group">
-          <label class="field-label">
-            ${t('field.voiceAiHandleTime')}
-            <span class="field-description">${t('field.voiceAiHandleTimeDesc')}</span>
-          </label>
-          <input type="number" id="aiHandleTime" value="${aiHandleTime}" min="0" step="0.1">
-        </div>
-      `;
-    }
-    if (hasChat) {
-      html += `
-        <div class="field-group">
-          <label class="field-label">
-            ${t('field.chatAiHandleTime')}
-            <span class="field-description">${t('field.chatAiHandleTimeDesc')}</span>
-          </label>
-          <input type="number" id="chatAiHandleTime" value="${chatAiHandleTime}" min="0" step="0.1">
-        </div>
-      `;
-    }
-    html += '</div>';
-  }
-
   container.innerHTML = html;
 }
 

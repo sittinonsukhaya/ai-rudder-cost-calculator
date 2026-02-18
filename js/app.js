@@ -102,7 +102,7 @@ function recalculate() {
 function renderStructure() {
   const state = getState();
   renderChannels(channelsContainer, state.channels);
-  renderRates(ratesContainer, state.channels, state.rates, state.aiHandleTime, state.chatAiHandleTime);
+  renderRates(ratesContainer, state.channels, state.rates);
   renderCostItems(clientItemsContainer, state.clientItems, 'client');
   renderCostItems(aiItemsContainer, state.aiItems, 'ai');
 }
@@ -114,7 +114,7 @@ function renderStructure() {
 function renderChannelsAndRates() {
   const state = getState();
   renderChannels(channelsContainer, state.channels);
-  renderRates(ratesContainer, state.channels, state.rates, state.aiHandleTime, state.chatAiHandleTime);
+  renderRates(ratesContainer, state.channels, state.rates);
 }
 
 // ===== Language Switch =====
@@ -183,7 +183,7 @@ channelsContainer.addEventListener('input', (e) => {
   // Re-render rates table when name changes (safe: user is typing in channels, not rates)
   if (field === 'name') {
     const updated = getState();
-    renderRates(ratesContainer, updated.channels, updated.rates, updated.aiHandleTime, updated.chatAiHandleTime);
+    renderRates(ratesContainer, updated.channels, updated.rates);
   }
 });
 
@@ -252,16 +252,6 @@ document.getElementById('addChannelBtn').addEventListener('click', () => {
 // --- Section 2: Rates - value changes ---
 ratesContainer.addEventListener('input', (e) => {
   const el = e.target;
-
-  // AI Handle Time fields
-  if (el.id === 'aiHandleTime') {
-    setState({ aiHandleTime: parseFloat(el.value) || 0 });
-    return;
-  }
-  if (el.id === 'chatAiHandleTime') {
-    setState({ chatAiHandleTime: parseFloat(el.value) || 0 });
-    return;
-  }
 
   // Channel rate inputs
   const channelId = Number(el.dataset.channelId);
@@ -353,11 +343,20 @@ document.querySelector('.cost-columns').addEventListener('click', (e) => {
   }
 });
 
-// --- Section 4: Efficiency Offset ---
+// --- Section 4: AI Rudder Configuration ---
 document.getElementById('deflectionRate').addEventListener('input', (e) => {
   setState({ deflectionRate: parseFloat(e.target.value) / 100 || 0 });
 });
 
+document.getElementById('aiHandleTime').addEventListener('input', (e) => {
+  setState({ aiHandleTime: parseFloat(e.target.value) || 0 });
+});
+
+document.getElementById('chatAiHandleTime').addEventListener('input', (e) => {
+  setState({ chatAiHandleTime: parseFloat(e.target.value) || 0 });
+});
+
+// --- Section 5: Efficiency Offset ---
 document.getElementById('adminHours').addEventListener('input', (e) => {
   setState({ adminHours: parseFloat(e.target.value) || 0 });
 });
@@ -482,6 +481,8 @@ function syncFixedInputs() {
   document.getElementById('totalAgents').value = state.totalAgents;
   document.getElementById('monthlySalary').value = state.monthlySalary;
   document.getElementById('deflectionRate').value = Math.round(state.deflectionRate * 100);
+  document.getElementById('aiHandleTime').value = state.aiHandleTime;
+  document.getElementById('chatAiHandleTime').value = state.chatAiHandleTime;
   document.getElementById('adminHours').value = state.adminHours;
 }
 

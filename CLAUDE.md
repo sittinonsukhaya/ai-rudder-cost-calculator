@@ -8,9 +8,10 @@ This document locks down terminology, code standards, and design patterns to pre
 
 ### Section Headers
 - **"Client Operations"** (not "Global Parameters" or "Operations Data")
-- **"Rates Comparison"** (not "Per-Unit Costs" or "Pricing")
+- **"Rates Comparison"** (not "Per-Unit Costs" or "Pricing") — rate table only
 - **"Additional Costs"** (not "Dynamic Ledger" or "Cost Items")
-- **"Efficiency Offset"** (not "Deflection Settings" or "Savings Calculator")
+- **"AI Rudder Configuration"** — deflection rate + AI handle times (voice/chat)
+- **"Efficiency Offset"** — admin hours saved only
 - **"Client Current State"** (not "Legacy" or "Status Quo")
 - **"AI Rudder Solution"** (not "Your Solution" or "New System")
 
@@ -26,16 +27,18 @@ This document locks down terminology, code standards, and design patterns to pre
 
 **Rates Comparison:**
 - **"Client Rate"** / **"AI Rudder's Bot Call Rates (AICalling)"** / **"AI Rudder Call Rates (AICC)"** — column headers
-- **"Voice AI Handle Time (Min)"** — *Average duration when AI handles a voice call* (used in cost calculation)
-- **"Chat AI Handle Time (Min)"** — *Average duration when AI handles a chat session* (informational only; chat is per-session billing)
 
 **Additional Costs:**
 - **"Cost Name"** (not "Description" or "Item")
 - **"Amount"** (not "Cost" or "Value")
 - **"Frequency"** (not "Type" or "Period")
 
-**Efficiency Offset:**
+**AI Rudder Configuration:**
 - **"AI Deflection Rate"** — *Percentage of interactions fully handled by AI without human intervention*
+- **"Voice AI Handle Time (Min)"** — *Average duration when AI handles a voice call* (used in cost calculation)
+- **"Chat AI Handle Time (Min)"** — *Average duration when AI handles a chat session* (informational only; chat is per-session billing)
+
+**Efficiency Offset:**
 - **"Hours Saved by Automation"** — *Total hours/month freed by AI — e.g. autodialing, queue handling, admin tasks*
 - Hourly rate is derived internally from `monthlySalary / 160` (not a user input)
 
