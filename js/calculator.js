@@ -125,7 +125,7 @@ export function calculateLedgerTotals(items, params = {}) {
  * @param {number} aiHandleTime - Shared AI handle time for voice
  * @param {Array} clientItems - Client additional cost items
  * @param {Array} aiItems - AI additional cost items
- * @param {Object} params - {totalAgents, monthlySalary, deflectionRate, adminHours, hourlyRate}
+ * @param {Object} params - {totalAgents, monthlySalary, deflectionRate, adminHours}
  * @returns {Object}
  */
 export function calculateMonthlyCosts(channels, rates, aiHandleTime,
@@ -142,7 +142,7 @@ export function calculateMonthlyCosts(channels, rates, aiHandleTime,
   const agentsReplaced = totalAgents - retainedAgents;
 
   const adminHours = p.adminHours || 0;
-  const hourlyRate = p.hourlyRate || 0;
+  const hourlyRate = (p.monthlySalary || 0) / 160;
   const adminValue = calculateAdminValue(adminHours, hourlyRate);
 
   const monthlySalary = p.monthlySalary || 0;
@@ -198,31 +198,30 @@ export function generateROITimeline(clientMonthly, aiMonthly, clientCapex, aiCap
 }
 
 /**
- * Calculate dashboard metrics
+ * Calculate dashboard metrics (hard savings only)
  * clientMonthly and aiMonthly already include agent payroll,
  * so payroll savings emerge naturally from the difference.
- * Admin value is an additional efficiency gain added to savings.
+ * Admin/efficiency gains are tracked separately in calculateEfficiencyGains().
  * @param {number} clientMonthly - Client total monthly spend (channels + payroll + additional)
  * @param {number} aiMonthly - AI total monthly spend (channels + retained payroll + additional)
  * @param {number} clientCapex - Client CapEx
  * @param {number} aiCapex - AI CapEx
- * @param {number} adminValue - Monthly admin hours value (efficiency gain)
  * @returns {Object}
  */
 export function calculateDashboardMetrics(
-  clientMonthly, aiMonthly, clientCapex, aiCapex, adminValue
+  clientMonthly, aiMonthly, clientCapex, aiCapex
 ) {
-  // Monthly savings = cost difference + admin efficiency
-  const monthlySavings = (clientMonthly - aiMonthly) + (adminValue || 0);
+  // Monthly savings = direct cost difference only (hard savings)
+  const monthlySavings = clientMonthly - aiMonthly;
 
   const year1ClientTotal = clientCapex + (clientMonthly * 12);
-  const year1AITotal = aiCapex + ((aiMonthly - (adminValue || 0)) * 12);
+  const year1AITotal = aiCapex + (aiMonthly * 12);
   const year1NetSavings = year1ClientTotal - year1AITotal;
 
   let breakEvenMonth = null;
   for (let month = 1; month <= 24; month++) {
     const clientCumulative = clientCapex + (clientMonthly * month);
-    const aiCumulative = aiCapex + ((aiMonthly - (adminValue || 0)) * month);
+    const aiCumulative = aiCapex + (aiMonthly * month);
 
     if (aiCumulative < clientCumulative) {
       breakEvenMonth = month;
@@ -230,10 +229,13 @@ export function calculateDashboardMetrics(
     }
   }
 
-  // Cost Reduction = Monthly Savings / Client Monthly × 100
+  // Cost Reduction = Monthly Savings / Client Monthly × 100 (hard savings only)
   const costReduction = clientMonthly > 0
     ? Math.round((monthlySavings / clientMonthly) * 100)
     : 0;
+
+  // ROI = year 1 net savings / initial investment
+  const roi = aiCapex > 0 ? Math.round(year1NetSavings / aiCapex * 100) : null;
 
   return {
     clientMonthly,
@@ -242,7 +244,66 @@ export function calculateDashboardMetrics(
     costReduction,
     initialInvestment: aiCapex,
     year1NetSavings,
-    breakEvenMonth
+    breakEvenMonth,
+    roi
+  };
+}
+
+/**
+ * Calculate efficiency gains (soft savings) — separate from direct cost savings
+ * @param {Object} params - {totalAgents, monthlySalary, deflectionRate, adminHours, channels}
+ * @returns {Object}
+ */
+export function calculateEfficiencyGains(params) {
+  const { totalAgents, monthlySalary, deflectionRate, adminHours, channels } = params || {};
+  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
+  const agentsReplaced = (totalAgents || 0) - retainedAgents;
+  const hourlyRate = (monthlySalary || 0) / 160;
+  const hoursValue = (adminHours || 0) * hourlyRate;
+  const capacityBase = retainedAgents * 160;
+  const capacityIncrease = capacityBase > 0 ? Math.round(((adminHours || 0) / capacityBase) * 100) : 0;
+
+  // Blended avg handle time from voice + chat channels (SMS excluded)
+  let totalMinutes = 0;
+  let totalInteractions = 0;
+  (channels || []).forEach(ch => {
+    if (ch.type === 'voice' || ch.type === 'chat') {
+      const ht = ch.humanHandleTime || 0;
+      const vol = ch.volume || 0;
+      if (ht > 0 && vol > 0) {
+        totalMinutes += vol * ht;
+        totalInteractions += vol;
+      }
+    }
+  });
+  const blendedHandleTime = totalInteractions > 0 ? totalMinutes / totalInteractions : 0;
+  const extraCapacity = blendedHandleTime > 0 ? Math.round((adminHours || 0) * 60 / blendedHandleTime) : 0;
+  const agentEquivalent = ((adminHours || 0) / 160).toFixed(1);
+
+  return {
+    aiCapacity: agentsReplaced,
+    totalAgents: totalAgents || 0,
+    automatedPct: Math.round((deflectionRate || 0) * 100),
+    hoursReclaimed: adminHours || 0,
+    agentEquivalent: parseFloat(agentEquivalent),
+    extraCapacity,
+    capacityIncrease,
+    estimatedValue: hoursValue
+  };
+}
+
+/**
+ * Calculate per-interaction cost for client and AI
+ * @param {number} clientMonthly - Client total monthly spend
+ * @param {number} aiMonthly - AI total monthly spend
+ * @param {Array} channels - Channel definitions with volume
+ * @returns {Object} - {client, ai} per-interaction costs
+ */
+export function calculatePerInteractionCost(clientMonthly, aiMonthly, channels) {
+  const totalVolume = (channels || []).reduce((sum, ch) => sum + (ch.volume || 0), 0);
+  return {
+    client: totalVolume > 0 ? clientMonthly / totalVolume : 0,
+    ai: totalVolume > 0 ? aiMonthly / totalVolume : 0
   };
 }
 

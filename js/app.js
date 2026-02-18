@@ -15,6 +15,8 @@ import {
   calculateMonthlyCosts,
   calculatePayrollSaved,
   calculateDashboardMetrics,
+  calculateEfficiencyGains,
+  calculatePerInteractionCost,
   generateROITimeline
 } from './calculator.js';
 import { saveScenario, loadScenario, listScenarios, deleteScenario } from './storage.js';
@@ -23,7 +25,7 @@ import {
   renderRates,
   renderCostItems,
   renderDashboard,
-  renderEfficiencyOffset,
+  renderEfficiencyGains,
   renderScenariosDropdown,
   showModal,
   showToast
@@ -52,34 +54,34 @@ function recalculate() {
       totalAgents: state.totalAgents,
       monthlySalary: state.monthlySalary,
       deflectionRate: state.deflectionRate,
-      adminHours: state.adminHours,
-      hourlyRate: state.hourlyRate
+      adminHours: state.adminHours
     }
-  );
-
-  const payrollSaved = calculatePayrollSaved(
-    results.agentsReplaced,
-    state.monthlySalary,
-    0
   );
 
   const metrics = calculateDashboardMetrics(
     results.clientMonthly,
     results.aiMonthly,
     results.clientCapex,
-    results.aiCapex,
-    results.adminValue
+    results.aiCapex
   );
 
-  renderDashboard(metrics);
+  const perInteractionCosts = calculatePerInteractionCost(
+    results.clientMonthly,
+    results.aiMonthly,
+    state.channels
+  );
 
-  renderEfficiencyOffset({
-    agentsReplaced: results.agentsReplaced,
+  renderDashboard(metrics, perInteractionCosts);
+
+  const efficiencyGains = calculateEfficiencyGains({
     totalAgents: state.totalAgents,
+    monthlySalary: state.monthlySalary,
     deflectionRate: state.deflectionRate,
-    payrollSaved,
-    adminValue: results.adminValue
+    adminHours: state.adminHours,
+    channels: state.channels
   });
+
+  renderEfficiencyGains(efficiencyGains);
 
   const timeline = generateROITimeline(
     results.clientMonthly,
@@ -195,10 +197,12 @@ channelsContainer.addEventListener('change', (e) => {
   const channels = state.channels.map(ch => {
     if (ch.id !== channelId) return ch;
     const updated = { ...ch, type: el.value };
-    if (el.value !== 'voice') {
+    if (el.value === 'voice') {
+      if (!updated.humanHandleTime) updated.humanHandleTime = 6;
+    } else if (el.value === 'chat') {
+      if (!updated.humanHandleTime) updated.humanHandleTime = 5;
+    } else {
       delete updated.humanHandleTime;
-    } else if (!updated.humanHandleTime) {
-      updated.humanHandleTime = 6;
     }
     return updated;
   });
@@ -354,10 +358,6 @@ document.getElementById('adminHours').addEventListener('input', (e) => {
   setState({ adminHours: parseFloat(e.target.value) || 0 });
 });
 
-document.getElementById('hourlyRate').addEventListener('input', (e) => {
-  setState({ hourlyRate: parseFloat(e.target.value) || 0 });
-});
-
 // --- Scenario Management ---
 document.getElementById('saveScenarioBtn').addEventListener('click', () => {
   showModal({
@@ -430,8 +430,7 @@ document.getElementById('loadScenarioBtn').addEventListener('click', () => {
           id: item.id || Date.now() + Math.random()
         })),
         deflectionRate: scenario.deflectionRate || 0.20,
-        adminHours: scenario.adminHours || 160,
-        hourlyRate: scenario.hourlyRate || 150
+        adminHours: scenario.adminHours || 160
       });
 
       // Re-render all dynamic DOM sections
@@ -479,7 +478,6 @@ function syncFixedInputs() {
   document.getElementById('monthlySalary').value = state.monthlySalary;
   document.getElementById('deflectionRate').value = Math.round(state.deflectionRate * 100);
   document.getElementById('adminHours').value = state.adminHours;
-  document.getElementById('hourlyRate').value = state.hourlyRate;
 }
 
 // ===== Initialize =====

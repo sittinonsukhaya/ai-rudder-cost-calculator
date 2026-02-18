@@ -161,40 +161,13 @@
           </div>
 
           <!-- Admin Hours -->
-          <div class="grid-2" style="margin-bottom: 16px;">
+          <div style="margin-bottom: 16px; max-width: 400px;">
             <div class="field-group">
               <label class="field-label">
-                <span data-i18n="field.adminHours">Admin Hours Saved/Month</span>
-                <span class="field-description" data-i18n="field.adminHoursDesc">Hours of supervisory/admin work eliminated by AI automation</span>
+                <span data-i18n="field.adminHours">Hours Saved by Automation</span>
+                <span class="field-description" data-i18n="field.adminHoursDesc">Total hours/month freed by AI — e.g. autodialing, queue handling, admin tasks</span>
               </label>
               <input type="number" id="adminHours" value="160" min="0" step="10">
-            </div>
-            <div class="field-group">
-              <label class="field-label">
-                <span data-i18n="field.hourlyRate">Hourly Rate</span>
-                <span class="field-description" data-i18n="field.hourlyRateDesc">Cost per hour for admin/supervisory time</span>
-              </label>
-              <input type="number" id="hourlyRate" value="150" min="0" step="10">
-            </div>
-          </div>
-
-          <!-- Derived Metrics -->
-          <div class="derived-metrics">
-            <div class="derived-metric">
-              <div class="label" data-i18n="derived.agentsReplaced">Agents Replaced</div>
-              <div id="agentsReplaced" class="value">0 of 0</div>
-            </div>
-            <div class="derived-metric">
-              <div class="label" data-i18n="derived.trafficToAI">Traffic Routed to AI</div>
-              <div id="trafficToAI" class="value">0%</div>
-            </div>
-            <div class="derived-metric green">
-              <div class="label" data-i18n="derived.payrollSaved">Payroll Saved</div>
-              <div id="payrollDisplay" class="value">฿0/mo</div>
-            </div>
-            <div class="derived-metric teal">
-              <div class="label" data-i18n="derived.adminValue">Admin Value Reclaimed</div>
-              <div id="adminValueDisplay" class="value">฿0/mo</div>
             </div>
           </div>
         </div>
@@ -207,30 +180,35 @@
         <!-- Dashboard Metrics -->
         <div class="card">
           <h2 style="margin-bottom: 16px;" data-i18n="section.dashboard">Dashboard</h2>
+
+          <!-- COST COMPARISON -->
+          <h3 class="dashboard-section-title" data-i18n="metric.costComparison">Cost Comparison</h3>
           <div class="dashboard-grid">
-            <!-- Row 1: Total spend comparison -->
             <div class="metric-card">
-              <div class="metric-label" data-i18n="metric.currentMonthly">Current Monthly Spend</div>
+              <div class="metric-label" data-i18n="metric.currentMonthly">Current Operations Cost</div>
               <div id="metricClientMonthly" class="metric-value" style="color: var(--client-legacy);">฿0</div>
-              <div class="metric-hint" data-i18n="metric.currentMonthlyHint">Channel costs + agent payroll + additional costs</div>
+              <div id="metricClientPerInteraction" class="metric-hint"></div>
             </div>
             <div class="metric-card">
-              <div class="metric-label" data-i18n="metric.aiMonthly">AI Rudder Monthly Spend</div>
+              <div class="metric-label" data-i18n="metric.aiMonthly">Operations Cost with AI Rudder</div>
               <div id="metricAIMonthly" class="metric-value blue">฿0</div>
-              <div class="metric-hint" data-i18n="metric.aiMonthlyHint">Channel costs + retained payroll + additional costs</div>
+              <div id="metricAIPerInteraction" class="metric-hint"></div>
             </div>
-            <!-- Row 2: The savings -->
+          </div>
+
+          <!-- DIRECT SAVINGS -->
+          <h3 class="dashboard-section-title" data-i18n="metric.directSavings">Direct Savings</h3>
+          <div class="dashboard-grid">
             <div class="metric-card">
               <div class="metric-label" data-i18n="metric.monthlySavings">Monthly Savings</div>
               <div id="metricMonthlySavings" class="metric-value savings">฿0</div>
-              <div class="metric-hint" data-i18n="metric.monthlySavingsHint">Total reduction including admin efficiency</div>
+              <div class="metric-hint" data-i18n="metric.monthlySavingsHint">Direct operational cost reduction</div>
             </div>
             <div class="metric-card">
               <div class="metric-label" data-i18n="metric.costReduction">Cost Reduction</div>
               <div id="metricCostReduction" class="metric-value savings">0%</div>
-              <div class="metric-hint" data-i18n="metric.costReductionHint">Percentage of current spend saved monthly</div>
+              <div class="metric-hint" data-i18n="metric.costReductionHint">Percentage of current cost saved</div>
             </div>
-            <!-- Row 3: Investment & timeline -->
             <div class="metric-card">
               <div class="metric-label" data-i18n="metric.initialInvestment">Initial Investment</div>
               <div id="metricInitialInvestment" class="metric-value">฿0</div>
@@ -241,11 +219,45 @@
               <div id="metricBreakEven" class="metric-value blue">-</div>
               <div class="metric-hint" data-i18n="metric.breakEvenHint">When cumulative savings exceed investment</div>
             </div>
-            <!-- Row 4: Bottom line -->
-            <div class="metric-card full-width">
+            <div class="metric-card">
               <div class="metric-label" data-i18n="metric.year1Savings">Year 1 Net Savings</div>
               <div id="metricYear1Savings" class="metric-value savings">฿0</div>
-              <div class="metric-hint" data-i18n="metric.year1SavingsHint">12 months of savings minus initial investment</div>
+              <div class="metric-hint" data-i18n="metric.year1SavingsHint">12 months of direct savings minus investment</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="metric.roi">ROI</div>
+              <div id="metricROI" class="metric-value savings">-</div>
+              <div class="metric-hint" data-i18n="metric.roiHint">Return on initial investment in Year 1</div>
+            </div>
+          </div>
+
+          <!-- EFFICIENCY GAINS -->
+          <h3 class="dashboard-section-title" data-i18n="efficiency.title">Efficiency Gains</h3>
+          <div class="dashboard-grid">
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="efficiency.aiCapacity">AI Capacity</div>
+              <div id="metricAICapacity" class="metric-value blue">-</div>
+              <div id="metricAICapacityHint" class="metric-hint"></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="efficiency.hoursReclaimed">Hours Reclaimed</div>
+              <div id="metricHoursReclaimed" class="metric-value">-</div>
+              <div id="metricHoursReclaimedHint" class="metric-hint"></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="efficiency.extraCapacity">Extra Serving Capacity</div>
+              <div id="metricExtraCapacity" class="metric-value teal-text">-</div>
+              <div id="metricExtraCapacityHint" class="metric-hint"></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label" data-i18n="efficiency.capacityIncrease">Capacity Increase</div>
+              <div id="metricCapacityIncrease" class="metric-value teal-text">-</div>
+              <div class="metric-hint" data-i18n="efficiency.capacityIncreaseHint">Team throughput gained</div>
+            </div>
+            <div class="metric-card full-width">
+              <div class="metric-label" data-i18n="efficiency.estimatedValue">Estimated Value</div>
+              <div id="metricEfficiencyValue" class="metric-value teal-text">฿0</div>
+              <div class="metric-hint" data-i18n="efficiency.estimatedValueHint">Monetary value of reclaimed time</div>
             </div>
           </div>
         </div>

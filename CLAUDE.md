@@ -1,4 +1,4 @@
-# AI Rudder Cost Calculator - Development Standards (v2.0)
+# AI Rudder Cost Calculator - Development Standards (v2.2)
 
 ## Purpose
 
@@ -25,8 +25,8 @@ This document locks down terminology, code standards, and design patterns to pre
 - **"Avg Handle Time (Minutes)"** — *Average duration per human-handled interaction* (voice only)
 
 **Rates Comparison:**
-- **"Client Rate"** / **"AI Rudder Rate"** — column headers
-- **"AI Handle Time (Minutes)"** — *Average duration when AI handles a voice interaction*
+- **"Client Rate"** / **"AI Rudder's Bot Call Rates (AICalling)"** / **"AI Rudder Call Rates (AICC)"** — column headers
+- **"AI Handle Time (Minutes)"** — *Average duration when AI handles a voice/chat interaction*
 
 **Additional Costs:**
 - **"Cost Name"** (not "Description" or "Item")
@@ -35,15 +35,15 @@ This document locks down terminology, code standards, and design patterns to pre
 
 **Efficiency Offset:**
 - **"AI Deflection Rate"** — *Percentage of interactions fully handled by AI without human intervention*
-- **"Admin Hours Saved/Month"** — *Hours of supervisory/admin work eliminated by AI automation*
-- **"Hourly Rate"** — *Cost per hour for admin/supervisory time*
+- **"Hours Saved by Automation"** — *Total hours/month freed by AI — e.g. autodialing, queue handling, admin tasks*
+- Hourly rate is derived internally from `monthlySalary / 160` (not a user input)
 
 ### Channel Types and Billing Units
 | Type | Billing Unit | Has Handle Time? |
 |------|-------------|-----------------|
 | Voice | per minute | Yes |
 | SMS | per message | No |
-| Chat | per session | No |
+| Chat | per session | Yes |
 
 ### Frequency Options (Additional Costs)
 - **"One-time"** — CapEx (Month 0 only)
@@ -53,18 +53,26 @@ This document locks down terminology, code standards, and design patterns to pre
 
 *Removed in v2.0:* "Per Minute" and "Per Session" — now handled by the structured Rates section.
 
-### Dashboard Metrics
-- **"Initial Investment"** (not "CapEx" or "Setup Costs")
-- **"Monthly Savings"** (not "OpEx Reduction" or "Monthly Benefit")
-- **"Payroll Saved"** (not "Headcount Savings" or "Labor Reduction")
-- **"Year 1 Net Savings"** (not "Annual Savings" or "First Year ROI")
-- **"Break-Even Month"** (not "Payback Period" or "ROI Timeline")
+### Dashboard Metrics (3 sections)
 
-### Efficiency Offset Display Labels
-- **"Agents Replaced: X of Y"**
-- **"Traffic Routed to AI: X%"**
-- **"Payroll Saved: ฿X/mo"**
-- **"Admin Value Reclaimed: ฿X/mo"**
+**Cost Comparison:**
+- **"Current Operations Cost"** (not "Current Monthly Spend")
+- **"Operations Cost with AI Rudder"** (not "AI Rudder Monthly Spend")
+
+**Direct Savings:**
+- **"Monthly Savings"** — direct operational cost reduction (hard savings only)
+- **"Cost Reduction"** — percentage of current cost saved monthly
+- **"Initial Investment"** (not "CapEx" or "Setup Costs")
+- **"Break-Even"** (not "Payback Period" or "ROI Timeline")
+- **"Year 1 Net Savings"** — 12 months of direct savings minus investment
+- **"ROI"** — return on initial investment in Year 1
+
+**Efficiency Gains:**
+- **"AI Capacity"** — `X / Y` agents (not "Agents Replaced")
+- **"Hours Reclaimed"** — hours/month freed by automation
+- **"Extra Serving Capacity"** — additional customers/month from reclaimed time
+- **"Capacity Increase"** — team throughput gained
+- **"Estimated Value"** — monetary value of reclaimed time
 
 ### Label Descriptions
 Every input label must include a subtitle in smaller, muted text explaining what the field means. These descriptions are defined in the Input Labels section above (italic text after the em-dash).
@@ -193,9 +201,9 @@ export function formatCurrency(value) {
 - **Formula:** `retainedAgents = totalAgents × (1 - deflectionRate)`
 - **Rounding:** `Math.ceil()` (conservative)
 
-### Admin Hours Saved
-- **Formula:** `adminValue = hoursPerMonth × hourlyRate`
-- **Applied as:** Monthly credit/offset to AI costs
+### Admin Hours Saved (Efficiency Gains)
+- **Formula:** `adminValue = hoursPerMonth × (monthlySalary / 160)`
+- **Applied as:** Soft savings shown in Efficiency Gains section (NOT included in direct savings)
 
 ### Break-Even Calculation
 ```javascript
@@ -264,6 +272,7 @@ test: Add multi-channel integration test
 - **v1.0.0** - Initial release
 - **v1.0.1** - ES6 module fix
 - **v2.0.0** - Channel-based model, left/right layout, ES modules
+- **v2.2.0** - Dashboard restructure (3 sections), hard vs soft savings separation, chat handle time, ROI%, per-interaction cost
 
 ---
 

@@ -517,6 +517,24 @@ input:focus, select:focus {
 .derived-metric.teal .value { color: var(--teal-accent); }
 
 /* ===== Dashboard (Output Panel) ===== */
+.dashboard-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted-text);
+  border-top: 1px solid var(--border-gray);
+  padding-top: 16px;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+
+.dashboard-section-title:first-of-type {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -551,6 +569,7 @@ input:focus, select:focus {
 
 .metric-value.savings { color: var(--savings-green); }
 .metric-value.teal { color: var(--teal-accent); }
+.metric-value.teal-text { color: var(--teal-accent); }
 .metric-value.blue { color: var(--brand-blue); }
 
 .metric-hint {

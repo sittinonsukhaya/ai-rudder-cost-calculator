@@ -29,9 +29,9 @@ const defaultState = {
   aiItems: [],
 
   // Section 4: Efficiency Offset
+  // hourlyRate is derived from monthlySalary / 160
   deflectionRate: 0.20,
-  adminHours: 160,
-  hourlyRate: 150
+  adminHours: 160
 };
 
 let state = structuredClone(defaultState);

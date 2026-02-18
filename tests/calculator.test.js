@@ -8,6 +8,8 @@ import {
   calculatePayrollSaved,
   generateROITimeline,
   calculateDashboardMetrics,
+  calculateEfficiencyGains,
+  calculatePerInteractionCost,
   formatCurrency,
   formatNumber
 } from '../js/calculator.js';
@@ -296,17 +298,18 @@ describe('calculateMonthlyCosts', () => {
     expect(result.aiMonthly).toBe(1200000);
   });
 
-  test('calculates admin value correctly', () => {
+  test('calculates admin value correctly (derived from salary)', () => {
     const params = {
       totalAgents: 100,
       monthlySalary: 25000,
       deflectionRate: 0.2,
-      adminHours: 160,
-      hourlyRate: 150
+      adminHours: 160
     };
 
     const result = calculateMonthlyCosts([], {}, 3.5, [], [], params);
-    expect(result.adminValue).toBe(24000);
+    // hourlyRate = 25000 / 160 = 156.25
+    // adminValue = 160 * 156.25 = 25000
+    expect(result.adminValue).toBe(25000);
   });
 
   test('handles empty inputs', () => {
@@ -388,63 +391,78 @@ describe('generateROITimeline', () => {
 });
 
 describe('calculateDashboardMetrics', () => {
-  test('calculates all metrics correctly with salaries included in monthly totals', () => {
+  test('calculates all metrics correctly (hard savings only, no adminValue)', () => {
     // clientMonthly and aiMonthly already include agent salaries
     const result = calculateDashboardMetrics(
-      2500000, 2000000, 0, 50000, 24000
+      2500000, 2000000, 0, 50000
     );
 
-    // monthlySavings = (2500000 - 2000000) + 24000 = 524,000
+    // monthlySavings = 2500000 - 2000000 = 500,000 (hard savings only)
     expect(result.clientMonthly).toBe(2500000);
     expect(result.aiMonthly).toBe(2000000);
-    expect(result.monthlySavings).toBe(524000);
+    expect(result.monthlySavings).toBe(500000);
     expect(result.initialInvestment).toBe(50000);
 
-    // costReduction = 524000 / 2500000 * 100 = 21%
-    expect(result.costReduction).toBe(21);
+    // costReduction = 500000 / 2500000 * 100 = 20%
+    expect(result.costReduction).toBe(20);
 
     // year1Client = 0 + 2500000*12 = 30,000,000
-    // year1AI = 50000 + (2000000-24000)*12 = 50000 + 23712000 = 23,762,000
-    // year1NetSavings = 30000000 - 23762000 = 6,238,000
-    expect(result.year1NetSavings).toBe(6238000);
+    // year1AI = 50000 + 2000000*12 = 24,050,000
+    // year1NetSavings = 30000000 - 24050000 = 5,950,000
+    expect(result.year1NetSavings).toBe(5950000);
+
+    // roi = 5950000 / 50000 * 100 = 11900%
+    expect(result.roi).toBe(11900);
   });
 
   test('finds break-even month', () => {
-    const result = calculateDashboardMetrics(100000, 50000, 0, 50000, 0);
+    const result = calculateDashboardMetrics(100000, 50000, 0, 50000);
     // Month 1: client=100000, ai=50000+50000=100000 (not less)
     // Month 2: client=200000, ai=50000+100000=150000 (less!)
     expect(result.breakEvenMonth).toBe(2);
   });
 
   test('returns null break-even when never reached', () => {
-    const result = calculateDashboardMetrics(50000, 100000, 0, 1000000, 0);
+    const result = calculateDashboardMetrics(50000, 100000, 0, 1000000);
     expect(result.breakEvenMonth).toBeNull();
   });
 
-  test('applies admin value as additional savings', () => {
-    const result = calculateDashboardMetrics(100000, 50000, 0, 0, 10000);
-    // monthlySavings = (100000 - 50000) + 10000 = 60,000
-    expect(result.monthlySavings).toBe(60000);
+  test('calculates hard savings only (no admin value)', () => {
+    const result = calculateDashboardMetrics(100000, 50000, 0, 0);
+    // monthlySavings = 100000 - 50000 = 50,000 (hard savings only)
+    expect(result.monthlySavings).toBe(50000);
   });
 
   test('calculates cost reduction percentage', () => {
-    const result = calculateDashboardMetrics(200000, 100000, 0, 0, 0);
+    const result = calculateDashboardMetrics(200000, 100000, 0, 0);
     // monthlySavings = 100000, costReduction = 100000/200000*100 = 50%
     expect(result.costReduction).toBe(50);
     expect(result.monthlySavings).toBe(100000);
   });
 
   test('handles zero client monthly for cost reduction', () => {
-    const result = calculateDashboardMetrics(0, 0, 0, 0, 0);
+    const result = calculateDashboardMetrics(0, 0, 0, 0);
     expect(result.costReduction).toBe(0);
   });
 
   test('calculates year 1 net savings accounting for initial investment', () => {
-    const result = calculateDashboardMetrics(200000, 100000, 0, 100000, 0);
+    const result = calculateDashboardMetrics(200000, 100000, 0, 100000);
     // year1Client = 200000*12 = 2,400,000
     // year1AI = 100000 + 100000*12 = 1,300,000
     // year1NetSavings = 1,100,000
     expect(result.year1NetSavings).toBe(1100000);
+  });
+
+  test('calculates ROI percentage', () => {
+    const result = calculateDashboardMetrics(200000, 100000, 0, 100000);
+    // year1NetSavings = 1,100,000
+    // roi = 1100000 / 100000 * 100 = 1100%
+    expect(result.roi).toBe(1100);
+  });
+
+  test('returns null ROI when no investment', () => {
+    const result = calculateDashboardMetrics(200000, 100000, 0, 0);
+    expect(result.roi).toBeNull();
   });
 });
 
@@ -507,8 +525,7 @@ describe('Real-world scenario: Multi-channel call center with split rates', () =
       totalAgents: 100,
       monthlySalary: 25000,
       deflectionRate: 0.2,
-      adminHours: 160,
-      hourlyRate: 150
+      adminHours: 160
     };
 
     const result = calculateMonthlyCosts(channels, rates, 3.5, clientItems, aiItems, params);
@@ -536,26 +553,179 @@ describe('Real-world scenario: Multi-channel call center with split rates', () =
 
     expect(result.aiCapex).toBe(50000);
     expect(result.agentsReplaced).toBe(20);
-    expect(result.adminValue).toBe(24000);
+    // adminValue = 160 * (25000/160) = 160 * 156.25 = 25,000
+    expect(result.adminValue).toBe(25000);
 
-    // Dashboard metrics (salaries already in monthly totals)
+    // Dashboard metrics (hard savings only — no adminValue)
     const metrics = calculateDashboardMetrics(
       result.clientMonthly, result.aiMonthly,
-      result.clientCapex, result.aiCapex,
-      result.adminValue
+      result.clientCapex, result.aiCapex
     );
 
-    // monthlySavings = (2830000 - 2327500) + 24000 = 526,500
-    // costReduction = 526500 / 2830000 * 100 ≈ 19%
+    // monthlySavings = 2830000 - 2327500 = 502,500 (hard savings only)
+    // costReduction = 502500 / 2830000 * 100 ≈ 18%
     expect(metrics.clientMonthly).toBe(2830000);
     expect(metrics.aiMonthly).toBe(2327500);
-    expect(metrics.monthlySavings).toBe(526500);
-    expect(metrics.costReduction).toBe(19);
+    expect(metrics.monthlySavings).toBe(502500);
+    expect(metrics.costReduction).toBe(18);
     expect(metrics.initialInvestment).toBe(50000);
     expect(metrics.breakEvenMonth).toBe(1);
 
-    // Payroll saved is still tracked for display in Efficiency Offset
+    // ROI: year1Net = (2830000-2327500)*12 - 50000 + 0 = 6030000 - 50000 = 5980000... let's compute:
+    // year1Client = 0 + 2830000*12 = 33,960,000
+    // year1AI = 50000 + 2327500*12 = 50000 + 27,930,000 = 27,980,000
+    // year1Net = 33960000 - 27980000 = 5,980,000
+    // roi = 5980000 / 50000 * 100 = 11960%
+    expect(metrics.year1NetSavings).toBe(5980000);
+    expect(metrics.roi).toBe(11960);
+
+    // Payroll saved is still tracked
     const payrollSaved = calculatePayrollSaved(20, 25000);
     expect(payrollSaved).toBe(500000);
+  });
+});
+
+describe('calculateEfficiencyGains', () => {
+  test('calculates AI capacity from deflection', () => {
+    const result = calculateEfficiencyGains({
+      totalAgents: 100,
+      monthlySalary: 25000,
+      deflectionRate: 0.2,
+      adminHours: 160,
+      channels: []
+    });
+
+    expect(result.aiCapacity).toBe(20);
+    expect(result.totalAgents).toBe(100);
+    expect(result.automatedPct).toBe(20);
+  });
+
+  test('calculates hours reclaimed and agent equivalent', () => {
+    const result = calculateEfficiencyGains({
+      totalAgents: 100,
+      monthlySalary: 25000,
+      deflectionRate: 0.2,
+      adminHours: 160,
+      channels: []
+    });
+
+    expect(result.hoursReclaimed).toBe(160);
+    // 160 / 160 = 1.0
+    expect(result.agentEquivalent).toBe(1.0);
+  });
+
+  test('calculates extra serving capacity with voice+chat blended handle time', () => {
+    const result = calculateEfficiencyGains({
+      totalAgents: 100,
+      monthlySalary: 25000,
+      deflectionRate: 0.2,
+      adminHours: 160,
+      channels: [
+        { type: 'voice', volume: 5000, humanHandleTime: 6 },
+        { type: 'chat', volume: 2000, humanHandleTime: 10 }
+      ]
+    });
+
+    // Blended: (5000*6 + 2000*10) / (5000+2000) = (30000+20000)/7000 = 50000/7000 ≈ 7.14
+    // extraCapacity = 160 * 60 / 7.14 ≈ 1344
+    const blended = 50000 / 7000;
+    const expected = Math.round(160 * 60 / blended);
+    expect(result.extraCapacity).toBe(expected);
+  });
+
+  test('excludes SMS from handle time calculation', () => {
+    const result = calculateEfficiencyGains({
+      totalAgents: 50,
+      monthlySalary: 30000,
+      deflectionRate: 0.3,
+      adminHours: 80,
+      channels: [
+        { type: 'voice', volume: 1000, humanHandleTime: 5 },
+        { type: 'sms', volume: 5000, humanHandleTime: 0 }
+      ]
+    });
+
+    // Only voice counted: blended = 5 min
+    // extraCapacity = 80 * 60 / 5 = 960
+    expect(result.extraCapacity).toBe(960);
+  });
+
+  test('calculates capacity increase percentage', () => {
+    const result = calculateEfficiencyGains({
+      totalAgents: 100,
+      monthlySalary: 25000,
+      deflectionRate: 0.2,
+      adminHours: 160,
+      channels: []
+    });
+
+    // retainedAgents = 80, capacityBase = 80*160 = 12800
+    // capacityIncrease = 160/12800*100 = 1%
+    expect(result.capacityIncrease).toBe(1);
+  });
+
+  test('calculates estimated value from salary', () => {
+    const result = calculateEfficiencyGains({
+      totalAgents: 100,
+      monthlySalary: 25000,
+      deflectionRate: 0.2,
+      adminHours: 160,
+      channels: []
+    });
+
+    // hourlyRate = 25000/160 = 156.25
+    // estimatedValue = 160 * 156.25 = 25000
+    expect(result.estimatedValue).toBe(25000);
+  });
+
+  test('handles zero/null inputs gracefully', () => {
+    const result = calculateEfficiencyGains({});
+    expect(result.aiCapacity).toBe(0);
+    expect(result.totalAgents).toBe(0);
+    expect(result.automatedPct).toBe(0);
+    expect(result.hoursReclaimed).toBe(0);
+    expect(result.agentEquivalent).toBe(0);
+    expect(result.extraCapacity).toBe(0);
+    expect(result.capacityIncrease).toBe(0);
+    expect(result.estimatedValue).toBe(0);
+  });
+});
+
+describe('calculatePerInteractionCost', () => {
+  test('calculates per-interaction cost with mixed channels', () => {
+    const channels = [
+      { volume: 5000 },
+      { volume: 2000 },
+      { volume: 3000 }
+    ];
+    const result = calculatePerInteractionCost(1000000, 500000, channels);
+
+    // totalVolume = 10000
+    // client = 1000000/10000 = 100
+    // ai = 500000/10000 = 50
+    expect(result.client).toBe(100);
+    expect(result.ai).toBe(50);
+  });
+
+  test('handles zero volume', () => {
+    const channels = [{ volume: 0 }];
+    const result = calculatePerInteractionCost(100000, 50000, channels);
+
+    expect(result.client).toBe(0);
+    expect(result.ai).toBe(0);
+  });
+
+  test('handles empty channels', () => {
+    const result = calculatePerInteractionCost(100000, 50000, []);
+
+    expect(result.client).toBe(0);
+    expect(result.ai).toBe(0);
+  });
+
+  test('handles null channels', () => {
+    const result = calculatePerInteractionCost(100000, 50000, null);
+
+    expect(result.client).toBe(0);
+    expect(result.ai).toBe(0);
   });
 });

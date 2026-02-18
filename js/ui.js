@@ -38,7 +38,7 @@ function getChannelTypes() {
   return {
     voice: { label: t('channel.voice'), unit: t('channel.perMinute'), hasHandleTime: true },
     sms: { label: t('channel.sms'), unit: t('channel.perMessage'), hasHandleTime: false },
-    chat: { label: t('channel.chat'), unit: t('channel.perSession'), hasHandleTime: false }
+    chat: { label: t('channel.chat'), unit: t('channel.perSession'), hasHandleTime: true }
   };
 }
 
@@ -54,8 +54,12 @@ export function renderChannels(container, channels) {
 
   container.innerHTML = channels.map(channel => {
     const config = channelTypes[channel.type] || channelTypes.voice;
-    const isVoice = channel.type === 'voice';
-    const fieldsClass = isVoice ? 'channel-card-fields three-col' : 'channel-card-fields';
+    const hasHandleTime = config.hasHandleTime;
+    const fieldsClass = hasHandleTime ? 'channel-card-fields three-col' : 'channel-card-fields';
+
+    // Use voice-specific or chat-specific handle time labels
+    const handleTimeLabel = channel.type === 'chat' ? t('field.chatHandleTime') : t('field.handleTime');
+    const handleTimeDesc = channel.type === 'chat' ? t('field.chatHandleTimeDesc') : t('field.handleTimeDesc');
 
     return `
       <div class="channel-card" data-channel-id="${channel.id}">
@@ -86,11 +90,11 @@ export function renderChannels(container, channels) {
             <input type="number" value="${channel.volume || 0}" min="0" step="100"
                    data-channel-id="${channel.id}" data-field="volume">
           </div>
-          ${isVoice ? `
+          ${hasHandleTime ? `
           <div class="field-group">
             <label class="field-label">
-              ${t('field.handleTime')}
-              <span class="field-description">${t('field.handleTimeDesc')}</span>
+              ${handleTimeLabel}
+              <span class="field-description">${handleTimeDesc}</span>
             </label>
             <input type="number" value="${channel.humanHandleTime || 0}" min="0" step="0.5"
                    data-channel-id="${channel.id}" data-field="humanHandleTime">
@@ -110,7 +114,7 @@ export function renderRates(container, channels, rates, aiHandleTime) {
   if (!container) return;
 
   const channelTypes = getChannelTypes();
-  const hasVoice = channels.some(c => c.type === 'voice');
+  const hasVoiceOrChat = channels.some(c => c.type === 'voice' || c.type === 'chat');
 
   if (channels.length === 0) {
     container.innerHTML = `<p style="color: var(--muted-text); font-size: 14px;">${t('misc.noChannels')}</p>`;
@@ -173,7 +177,7 @@ export function renderRates(container, channels, rates, aiHandleTime) {
 
   html += '</tbody></table>';
 
-  if (hasVoice) {
+  if (hasVoiceOrChat) {
     html += `
       <div class="field-group" style="margin-top: 16px; max-width: 250px;">
         <label class="field-label">
@@ -223,10 +227,10 @@ export function renderCostItems(container, items, side) {
 }
 
 /**
- * Render dashboard metrics (6 KPIs telling the savings story)
- * Story: What you pay → What AI costs → What you save → When it pays off
+ * Render dashboard metrics
+ * 3 sections: Cost Comparison → Direct Savings → Efficiency Gains
  */
-export function renderDashboard(metrics) {
+export function renderDashboard(metrics, perInteractionCosts) {
   const setIfExists = (id, value) => {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
@@ -243,22 +247,69 @@ export function renderDashboard(metrics) {
       : t('misc.na')
   );
   setIfExists('metricYear1Savings', formatCurrency(metrics.year1NetSavings));
+  setIfExists('metricROI',
+    metrics.roi !== null
+      ? `${formatNumber(metrics.roi)}%`
+      : '-'
+  );
+
+  // Per-interaction cost hints
+  if (perInteractionCosts) {
+    const pic = perInteractionCosts;
+    setIfExists('metricClientPerInteraction',
+      pic.client > 0
+        ? t('metric.perInteraction').replace('{amount}', formatCurrency(Math.round(pic.client)))
+        : ''
+    );
+    setIfExists('metricAIPerInteraction',
+      pic.ai > 0
+        ? t('metric.perInteraction').replace('{amount}', formatCurrency(Math.round(pic.ai)))
+        : ''
+    );
+  }
 }
 
 /**
- * Render efficiency offset derived displays
+ * Render efficiency gains section in the dashboard
  */
-export function renderEfficiencyOffset(data) {
+export function renderEfficiencyGains(data) {
   const setIfExists = (id, value) => {
     const node = document.getElementById(id);
     if (node) node.textContent = value;
   };
 
-  setIfExists('agentsReplaced', `${formatNumber(data.agentsReplaced)} of ${formatNumber(data.totalAgents)}`);
-  setIfExists('trafficToAI', `${formatNumber(data.deflectionRate * 100)}%`);
-  setIfExists('payrollDisplay', `${formatCurrency(data.payrollSaved)}/mo`);
-  setIfExists('adminValueDisplay', `${formatCurrency(data.adminValue)}/mo`);
-  setIfExists('deflectionValue', `${Math.round(data.deflectionRate * 100)}%`);
+  // AI Capacity
+  setIfExists('metricAICapacity', `${formatNumber(data.aiCapacity)} / ${formatNumber(data.totalAgents)}`);
+  setIfExists('metricAICapacityHint',
+    t('efficiency.aiCapacityHint')
+      .replace('{n}', formatNumber(data.aiCapacity))
+      .replace('{pct}', formatNumber(data.automatedPct))
+  );
+
+  // Hours Reclaimed
+  setIfExists('metricHoursReclaimed', `${formatNumber(data.hoursReclaimed)} hrs/mo`);
+  setIfExists('metricHoursReclaimedHint',
+    t('efficiency.hoursReclaimedHint')
+      .replace('{n}', formatNumber(data.hoursReclaimed))
+      .replace('{eq}', data.agentEquivalent)
+  );
+
+  // Extra Serving Capacity
+  setIfExists('metricExtraCapacity', data.extraCapacity > 0 ? `+${formatNumber(data.extraCapacity)}` : '-');
+  setIfExists('metricExtraCapacityHint',
+    data.extraCapacity > 0
+      ? t('efficiency.extraCapacityHint').replace('{n}', formatNumber(data.extraCapacity))
+      : ''
+  );
+
+  // Capacity Increase
+  setIfExists('metricCapacityIncrease', data.capacityIncrease > 0 ? `+${formatNumber(data.capacityIncrease)}%` : '-');
+
+  // Estimated Value
+  setIfExists('metricEfficiencyValue', formatCurrency(data.estimatedValue));
+
+  // Deflection slider display (still in input section)
+  setIfExists('deflectionValue', `${data.automatedPct}%`);
 }
 
 /**
