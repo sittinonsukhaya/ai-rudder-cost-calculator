@@ -778,7 +778,7 @@
       <a href="#estimation"><span class="en-text">3. Estimation Guide</span><span class="th-text">3. คู่มือประมาณค่า</span></a>
       <a href="#est-volume" class="toc-sub"><span class="en-text">3a. Volume</span><span class="th-text">3a. ปริมาณสาย</span></a>
       <a href="#est-aht" class="toc-sub"><span class="en-text">3b. Avg Handle Time</span><span class="th-text">3b. เวลาจัดการเฉลี่ย</span></a>
-      <a href="#est-ai-ht" class="toc-sub"><span class="en-text">3c. AI Handle Time</span><span class="th-text">3c. เวลาจัดการของ AI</span></a>
+      <a href="#est-ai-ht" class="toc-sub"><span class="en-text">3c. AI Handle Times (Voice &amp; Chat)</span><span class="th-text">3c. เวลาจัดการของ AI (เสียง &amp; แชท)</span></a>
       <a href="#est-deflection" class="toc-sub"><span class="en-text">3d. Deflection Rate</span><span class="th-text">3d. อัตรา Deflection</span></a>
       <a href="#est-admin" class="toc-sub"><span class="en-text">3e. Admin Hours Saved</span><span class="th-text">3e. ชั่วโมง Admin ที่ประหยัด</span></a>
       <a href="#est-addcosts" class="toc-sub"><span class="en-text">3f. Additional Costs</span><span class="th-text">3f. ค่าใช้จ่ายเพิ่มเติม</span></a>
@@ -1126,17 +1126,20 @@
           </div>
         </div>
 
-        <!-- 3C: AI Handle Time -->
+        <!-- 3C: AI Handle Times (Voice & Chat) -->
         <div class="estimation-subsection" id="est-ai-ht">
-          <h3 class="en-heading">3c. AI Handle Time</h3>
-          <h3 class="th-heading">3c. เวลาจัดการของ AI</h3>
+          <h3 class="en-heading">3c. AI Handle Times (Voice &amp; Chat)</h3>
+          <h3 class="th-heading">3c. เวลาจัดการของ AI (เสียง &amp; แชท)</h3>
 
           <div class="en-block">
-            <p>This is how long the AI bot takes per voice call. Bots are faster than humans because there is no hold time and no after-call work.</p>
+            <p>These fields are in the <strong>AI Rudder Configuration</strong> section. There are two separate inputs:</p>
+
+            <h4>Voice AI Handle Time</h4>
+            <p>How long the AI bot takes per voice call. This is used directly in cost calculation (voice is billed per minute). Bots are faster than humans because there is no hold time and no after-call work.</p>
 
             <div class="formula-box">
-              <div class="formula">AI Handle Time &asymp; Human AHT &times; 0.5 to 0.7</div>
-              <div class="formula-example">If human AHT is <span class="field-example">6</span> min, AI handle time is roughly <strong>3–4 min</strong></div>
+              <div class="formula">Voice AI Handle Time &asymp; Human AHT &times; 0.5 to 0.7</div>
+              <div class="formula-example">If human AHT is <span class="field-example">6</span> min, Voice AI handle time is roughly <strong>3–4 min</strong></div>
             </div>
 
             <p><strong>Why is AI faster?</strong></p>
@@ -1146,15 +1149,22 @@
               <li>No small talk or pauses</li>
               <li>For scripted outbound campaigns, bots can be even faster (1–2 min)</li>
             </ul>
-            <p style="margin-top: 8px;"><strong>Safe default:</strong> If unsure, set AI Handle Time equal to the human AHT. This is the most conservative estimate — the real number will almost certainly be lower, making the actual savings even better.</p>
+            <p style="margin-top: 8px;"><strong>Safe default:</strong> If unsure, set Voice AI Handle Time equal to the human AHT. This is the most conservative estimate — the real number will almost certainly be lower, making the actual savings even better.</p>
+
+            <h4>Chat AI Handle Time</h4>
+            <p>How long the AI bot takes per chat session. This is <strong>informational only</strong> — chat is billed per session, not per minute, so this value does not affect cost calculations. It's useful for setting expectations with the client about chat bot response times.</p>
+            <p><strong>Typical value:</strong> 1–3 minutes per chat session.</p>
           </div>
 
           <div class="thai-block">
-            <p>คือระยะเวลาที่บอท AI ใช้ต่อสาย บอทเร็วกว่าคนเพราะไม่มีเวลา hold และไม่มีงานหลังสาย</p>
+            <p>ช่องเหล่านี้อยู่ในส่วน <strong>AI Rudder Configuration</strong> มี 2 ช่องแยกกัน:</p>
+
+            <h4>Voice AI Handle Time (เวลาจัดการเสียงของ AI)</h4>
+            <p>ระยะเวลาที่บอท AI ใช้ต่อสายเสียง ใช้ในการคำนวณต้นทุนโดยตรง (เสียงคิดค่าบริการต่อนาที) บอทเร็วกว่าคนเพราะไม่มีเวลา hold และไม่มีงานหลังสาย</p>
 
             <div class="formula-box">
-              <div class="formula">AI Handle Time &asymp; AHT ของคน &times; 0.5 ถึง 0.7</div>
-              <div class="formula-example">ถ้า AHT คนเท่ากับ <span class="field-example">6</span> นาที, AI handle time จะประมาณ <strong>3–4 นาที</strong></div>
+              <div class="formula">Voice AI Handle Time &asymp; AHT ของคน &times; 0.5 ถึง 0.7</div>
+              <div class="formula-example">ถ้า AHT คนเท่ากับ <span class="field-example">6</span> นาที, Voice AI handle time จะประมาณ <strong>3–4 นาที</strong></div>
             </div>
 
             <p><strong>ทำไมบอทเร็วกว่า?</strong></p>
@@ -1164,7 +1174,11 @@
               <li>ไม่มี small talk หรือหยุดพัก</li>
               <li>สำหรับแคมเปญโทรออกแบบ scripted บอทอาจเร็วกว่ามาก (1–2 นาที)</li>
             </ul>
-            <p style="margin-top: 8px;"><strong>ค่าเริ่มต้นที่ปลอดภัย:</strong> ถ้าไม่แน่ใจ ตั้ง AI Handle Time เท่ากับ AHT ของคน เป็นการประมาณแบบอนุรักษ์นิยมที่สุด — ตัวเลขจริงมักจะต่ำกว่า ทำให้ประหยัดได้มากกว่า</p>
+            <p style="margin-top: 8px;"><strong>ค่าเริ่มต้นที่ปลอดภัย:</strong> ถ้าไม่แน่ใจ ตั้ง Voice AI Handle Time เท่ากับ AHT ของคน เป็นการประมาณแบบอนุรักษ์นิยมที่สุด — ตัวเลขจริงมักจะต่ำกว่า ทำให้ประหยัดได้มากกว่า</p>
+
+            <h4>Chat AI Handle Time (เวลาจัดการแชทของ AI)</h4>
+            <p>ระยะเวลาที่บอท AI ใช้ต่อ chat session <strong>เป็นข้อมูลอ้างอิงเท่านั้น</strong> — แชทคิดค่าบริการต่อ session ไม่ใช่ต่อนาที ค่านี้จึงไม่มีผลต่อการคำนวณต้นทุน แต่มีประโยชน์ในการตั้งความคาดหวังกับลูกค้าเกี่ยวกับความเร็วของแชทบอท</p>
+            <p><strong>ค่าปกติ:</strong> 1–3 นาทีต่อ chat session</p>
           </div>
         </div>
 
@@ -1702,13 +1716,9 @@
                 <td><span class="field-example">0</span></td>
                 <td>Leave at 0 — bot-only, no cloud CC</td>
               </tr>
-              <tr>
-                <td>AI Handle Time (Minutes)</td>
-                <td><span class="field-example">3</span></td>
-                <td>How long the bot takes per call</td>
-              </tr>
             </table>
             <p style="margin-top: 8px;"><strong>Key rule:</strong> For Scenario B (Bot Only), fill in the Bot Rate and leave the Call Rate at 0. For Scenario A (Cloud CC), do the opposite. For Scenario C (Hybrid), fill in both.</p>
+            <p style="margin-top: 4px;"><strong>Note:</strong> AI Handle Times are now set in the <strong>AI Rudder Configuration</strong> section (Step 4), not here.</p>
           </div>
 
           <div class="thai-block">
@@ -1734,13 +1744,9 @@
                 <td><span class="field-example">0</span></td>
                 <td>ปล่อยเป็น 0 — ใช้บอทอย่างเดียว ไม่มี cloud CC</td>
               </tr>
-              <tr>
-                <td>AI Handle Time (นาที)</td>
-                <td><span class="field-example">3</span></td>
-                <td>ระยะเวลาบอทจัดการแต่ละสาย</td>
-              </tr>
             </table>
             <p style="margin-top: 8px;"><strong>กฎสำคัญ:</strong> สถานการณ์ B (Bot Only) กรอก Bot Rate ปล่อย Call Rate เป็น 0 สถานการณ์ A (Cloud CC) ทำตรงข้าม สถานการณ์ C (Hybrid) กรอกทั้งคู่</p>
+            <p style="margin-top: 4px;"><strong>หมายเหตุ:</strong> AI Handle Times ตั้งค่าในส่วน <strong>AI Rudder Configuration</strong> (ขั้นตอนที่ 4) ไม่ใช่ที่นี่</p>
           </div>
         </div>
 
@@ -1799,100 +1805,114 @@
           </div>
         </div>
 
-        <!-- Step 4 -->
+        <!-- Step 4: AI Rudder Configuration -->
         <div class="step-block">
-          <div class="step-title"><span class="step-number">4</span> <span class="en-text">Efficiency Offset</span><span class="th-text">ประสิทธิภาพที่เพิ่มขึ้น</span></div>
+          <div class="step-title"><span class="step-number">4</span> <span class="en-text">AI Rudder Configuration</span><span class="th-text">การตั้งค่า AI Rudder</span></div>
 
           <div class="en-block">
-            <p>Set the <strong>AI Deflection Rate</strong> slider to <span class="field-example">20%</span>. This means 20% of calls will be fully handled by the AI bot without a human.</p>
+            <p>This section controls how the AI bot behaves. There are three settings:</p>
 
-            <p style="margin-top: 10px;">The derived metrics below the slider will update automatically:</p>
             <table>
               <tr>
-                <th>Metric</th>
-                <th>What it means</th>
-                <th>In our example</th>
+                <th>Field</th>
+                <th>Value</th>
+                <th>What it does</th>
               </tr>
               <tr>
-                <td><strong>Agents Replaced</strong></td>
-                <td>How many agents are no longer needed</td>
-                <td>20 of 100</td>
+                <td><strong>AI Deflection Rate</strong></td>
+                <td><span class="field-example">20%</span></td>
+                <td>Percentage of interactions fully handled by AI without a human</td>
               </tr>
               <tr>
-                <td><strong>Traffic Routed to AI</strong></td>
-                <td>Same as the deflection slider value</td>
-                <td>20%</td>
+                <td><strong>Voice AI Handle Time</strong></td>
+                <td><span class="field-example">3.5 min</span></td>
+                <td>Average duration when AI handles a voice call (used in cost calculation)</td>
               </tr>
               <tr>
-                <td><strong>Payroll Saved</strong></td>
-                <td>Monthly salary savings from fewer agents</td>
-                <td>฿500,000/mo</td>
-              </tr>
-              <tr>
-                <td><strong>Admin Value Reclaimed</strong></td>
-                <td>Value of admin hours saved (set above)</td>
-                <td>฿24,000/mo</td>
+                <td><strong>Chat AI Handle Time</strong></td>
+                <td><span class="field-example">2 min</span></td>
+                <td>Average duration when AI handles a chat session (informational only; chat is per-session billing)</td>
               </tr>
             </table>
 
-            <p style="margin-top: 8px;"><strong>Tip:</strong> For Scenario A (Cloud CC only), keep deflection at <strong>0%</strong> because there is no bot to deflect calls.</p>
+            <p style="margin-top: 8px;"><strong>Tip:</strong> For Scenario A (Cloud CC only), keep deflection at <strong>0%</strong> because there is no bot to deflect calls. Voice AI Handle Time won't matter in that case.</p>
           </div>
 
           <div class="thai-block">
-            <p>ตั้ง slider <strong>AI Deflection Rate</strong> ไปที่ <span class="field-example">20%</span> หมายความว่า 20% ของสายจะถูกจัดการโดย AI bot ทั้งหมดโดยไม่ต้องมีคน</p>
+            <p>ส่วนนี้ควบคุมการทำงานของบอท AI มี 3 การตั้งค่า:</p>
 
-            <p style="margin-top: 10px;">ตัวชี้วัดด้านล่าง slider จะอัปเดตอัตโนมัติ:</p>
             <table>
               <tr>
-                <th>ตัวชี้วัด</th>
-                <th>หมายความว่า</th>
-                <th>ในตัวอย่างนี้</th>
+                <th>ช่อง</th>
+                <th>ค่า</th>
+                <th>ทำหน้าที่อะไร</th>
               </tr>
               <tr>
-                <td><strong>Agents Replaced</strong></td>
-                <td>จำนวนเอเจนต์ที่ไม่ต้องใช้แล้ว</td>
-                <td>20 จาก 100</td>
+                <td><strong>AI Deflection Rate</strong></td>
+                <td><span class="field-example">20%</span></td>
+                <td>เปอร์เซ็นต์ของการโต้ตอบที่ AI จัดการทั้งหมดโดยไม่ต้องมีคน</td>
               </tr>
               <tr>
-                <td><strong>Traffic Routed to AI</strong></td>
-                <td>เท่ากับค่า deflection slider</td>
-                <td>20%</td>
+                <td><strong>Voice AI Handle Time</strong></td>
+                <td><span class="field-example">3.5 นาที</span></td>
+                <td>ระยะเวลาเฉลี่ยที่ AI จัดการสายเสียง (ใช้ในการคำนวณต้นทุน)</td>
               </tr>
               <tr>
-                <td><strong>Payroll Saved</strong></td>
-                <td>เงินเดือนที่ประหยัดจากการลดเอเจนต์</td>
-                <td>฿500,000/เดือน</td>
-              </tr>
-              <tr>
-                <td><strong>Admin Value Reclaimed</strong></td>
-                <td>มูลค่าของชั่วโมง admin ที่ประหยัดได้</td>
-                <td>฿24,000/เดือน</td>
+                <td><strong>Chat AI Handle Time</strong></td>
+                <td><span class="field-example">2 นาที</span></td>
+                <td>ระยะเวลาเฉลี่ยที่ AI จัดการ chat session (ข้อมูลอ้างอิงเท่านั้น; แชทคิดค่าบริการต่อ session)</td>
               </tr>
             </table>
 
-            <p style="margin-top: 8px;"><strong>เคล็ดลับ:</strong> สำหรับสถานการณ์ A (Cloud CC เท่านั้น) ให้ตั้ง deflection ที่ <strong>0%</strong> เพราะไม่มีบอทมารับสาย</p>
+            <p style="margin-top: 8px;"><strong>เคล็ดลับ:</strong> สำหรับสถานการณ์ A (Cloud CC เท่านั้น) ให้ตั้ง deflection ที่ <strong>0%</strong> เพราะไม่มีบอทมารับสาย Voice AI Handle Time จะไม่มีผลในกรณีนั้น</p>
           </div>
         </div>
 
-        <!-- Step 5 -->
+        <!-- Step 5: Efficiency Offset -->
         <div class="step-block">
-          <div class="step-title"><span class="step-number">5</span> <span class="en-text">Reading the Dashboard</span><span class="th-text">อ่านผลลัพธ์ Dashboard</span></div>
+          <div class="step-title"><span class="step-number">5</span> <span class="en-text">Efficiency Offset</span><span class="th-text">ประสิทธิภาพที่เพิ่มขึ้น</span></div>
 
           <div class="en-block">
-            <p>The right panel shows the results. Here's what each metric means:</p>
+            <p>Set the <strong>Hours Saved by Automation</strong> — the total hours per month freed by AI through autodialing, queue handling, admin tasks, etc.</p>
+            <p>The hourly rate is derived automatically from the monthly salary (salary / 160 hours). The resulting value is shown as <strong>Estimated Value</strong> in the Efficiency Gains section of the dashboard — this is a soft savings metric, not included in the direct cost comparison.</p>
+            <p style="margin-top: 8px;"><strong>Example:</strong> If agents spend 160 hours/month on admin work that AI can automate, enter <span class="field-example">160</span>.</p>
+          </div>
 
+          <div class="thai-block">
+            <p>ตั้งค่า <strong>Hours Saved by Automation</strong> — จำนวนชั่วโมงรวมต่อเดือนที่ AI ช่วยประหยัดผ่านการโทรอัตโนมัติ จัดการคิว งานธุรการ ฯลฯ</p>
+            <p>อัตรารายชั่วโมงคำนวณอัตโนมัติจากเงินเดือน (เงินเดือน / 160 ชั่วโมง) มูลค่าที่ได้จะแสดงเป็น <strong>Estimated Value</strong> ในส่วน Efficiency Gains ของ dashboard — เป็นตัวชี้วัดการประหยัดแบบ soft ไม่รวมในการเปรียบเทียบต้นทุนโดยตรง</p>
+            <p style="margin-top: 8px;"><strong>ตัวอย่าง:</strong> ถ้าเอเจนต์ใช้เวลา 160 ชั่วโมง/เดือนกับงานธุรการที่ AI ทำได้ ให้กรอก <span class="field-example">160</span></p>
+          </div>
+        </div>
+
+        <!-- Step 6: Reading the Dashboard -->
+        <div class="step-block">
+          <div class="step-title"><span class="step-number">6</span> <span class="en-text">Reading the Dashboard</span><span class="th-text">อ่านผลลัพธ์ Dashboard</span></div>
+
+          <div class="en-block">
+            <p>The right panel shows the results in three sections:</p>
+
+            <h4>Cost Comparison</h4>
             <table>
               <tr>
                 <th>Metric</th>
                 <th>Meaning</th>
               </tr>
               <tr>
-                <td><strong>Current Monthly Spend</strong></td>
+                <td><strong>Current Operations Cost</strong></td>
                 <td>Everything the client pays today: channel costs + full payroll + additional costs</td>
               </tr>
               <tr>
-                <td><strong>AI Rudder Monthly Spend</strong></td>
+                <td><strong>Operations Cost with AI Rudder</strong></td>
                 <td>What the client would pay with AI Rudder: channel costs + reduced payroll + additional costs</td>
+              </tr>
+            </table>
+
+            <h4>Direct Savings</h4>
+            <table>
+              <tr>
+                <th>Metric</th>
+                <th>Meaning</th>
               </tr>
               <tr>
                 <td><strong>Monthly Savings</strong></td>
@@ -1914,6 +1934,38 @@
                 <td><strong>Year 1 Net Savings</strong></td>
                 <td>12 months of monthly savings minus the initial investment — the bottom-line number</td>
               </tr>
+              <tr>
+                <td><strong>ROI</strong></td>
+                <td>Return on initial investment in Year 1</td>
+              </tr>
+            </table>
+
+            <h4>Efficiency Gains</h4>
+            <table>
+              <tr>
+                <th>Metric</th>
+                <th>Meaning</th>
+              </tr>
+              <tr>
+                <td><strong>Agents Freed Up</strong></td>
+                <td>Number of agents available for higher-value tasks (e.g. "20 agents")</td>
+              </tr>
+              <tr>
+                <td><strong>Hours Reclaimed</strong></td>
+                <td>Hours per month freed by automation</td>
+              </tr>
+              <tr>
+                <td><strong>Extra Serving Capacity</strong></td>
+                <td>Additional customers per month from reclaimed time</td>
+              </tr>
+              <tr>
+                <td><strong>Capacity Increase</strong></td>
+                <td>Team throughput gained as a percentage</td>
+              </tr>
+              <tr>
+                <td><strong>Estimated Value</strong></td>
+                <td>Monetary value of reclaimed time (soft savings)</td>
+              </tr>
             </table>
 
             <h3>Reading the Chart</h3>
@@ -1927,20 +1979,29 @@
           </div>
 
           <div class="thai-block">
-            <p>แผงด้านขวาแสดงผลลัพธ์ แต่ละตัวชี้วัดหมายความว่า:</p>
+            <p>แผงด้านขวาแสดงผลลัพธ์ใน 3 ส่วน:</p>
 
+            <h4>Cost Comparison (เปรียบเทียบต้นทุน)</h4>
             <table>
               <tr>
                 <th>ตัวชี้วัด</th>
                 <th>ความหมาย</th>
               </tr>
               <tr>
-                <td><strong>Current Monthly Spend</strong></td>
+                <td><strong>Current Operations Cost</strong></td>
                 <td>ทุกอย่างที่ลูกค้าจ่ายวันนี้: ค่าช่องทาง + เงินเดือนทั้งหมด + ค่าใช้จ่ายเพิ่มเติม</td>
               </tr>
               <tr>
-                <td><strong>AI Rudder Monthly Spend</strong></td>
+                <td><strong>Operations Cost with AI Rudder</strong></td>
                 <td>สิ่งที่ลูกค้าจ่ายกับ AI Rudder: ค่าช่องทาง + เงินเดือนที่ลดลง + ค่าใช้จ่ายเพิ่มเติม</td>
+              </tr>
+            </table>
+
+            <h4>Direct Savings (การประหยัดโดยตรง)</h4>
+            <table>
+              <tr>
+                <th>ตัวชี้วัด</th>
+                <th>ความหมาย</th>
               </tr>
               <tr>
                 <td><strong>Monthly Savings</strong></td>
@@ -1961,6 +2022,38 @@
               <tr>
                 <td><strong>Year 1 Net Savings</strong></td>
                 <td>ประหยัด 12 เดือน ลบค่า setup = ตัวเลขสรุป</td>
+              </tr>
+              <tr>
+                <td><strong>ROI</strong></td>
+                <td>ผลตอบแทนจากการลงทุนเริ่มต้นในปีที่ 1</td>
+              </tr>
+            </table>
+
+            <h4>Efficiency Gains (ประสิทธิภาพที่เพิ่มขึ้น)</h4>
+            <table>
+              <tr>
+                <th>ตัวชี้วัด</th>
+                <th>ความหมาย</th>
+              </tr>
+              <tr>
+                <td><strong>Agents Freed Up</strong></td>
+                <td>จำนวนเอเจนต์ที่พร้อมทำงานที่มีมูลค่าสูงขึ้น (เช่น "20 agents")</td>
+              </tr>
+              <tr>
+                <td><strong>Hours Reclaimed</strong></td>
+                <td>ชั่วโมงต่อเดือนที่ประหยัดจากระบบอัตโนมัติ</td>
+              </tr>
+              <tr>
+                <td><strong>Extra Serving Capacity</strong></td>
+                <td>จำนวนลูกค้าเพิ่มเติมต่อเดือนจากเวลาที่ได้คืน</td>
+              </tr>
+              <tr>
+                <td><strong>Capacity Increase</strong></td>
+                <td>ประสิทธิภาพทีมที่เพิ่มขึ้นเป็นเปอร์เซ็นต์</td>
+              </tr>
+              <tr>
+                <td><strong>Estimated Value</strong></td>
+                <td>มูลค่าเงินของเวลาที่ได้คืน (soft savings)</td>
               </tr>
             </table>
 
@@ -2001,7 +2094,7 @@
                 <li>Deflection: <span class="tag-skip">0%</span></li>
                 <li>Bot Rate: <span class="tag-skip">Leave at 0</span></li>
                 <li>Call Rate: <span class="tag-fill">Fill in</span></li>
-                <li>AI Handle Time: <span class="tag-skip">Not used</span></li>
+                <li>Voice AI Handle Time: <span class="tag-skip">Not used</span></li>
               </ul>
               <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">The savings come from a lower per-minute call rate and additional cost differences.</p>
             </div>
@@ -2013,7 +2106,8 @@
                 <li>Deflection: <span class="tag-fill">10–80%</span></li>
                 <li>Bot Rate: <span class="tag-fill">Fill in</span></li>
                 <li>Call Rate: <span class="tag-skip">Leave at 0</span></li>
-                <li>AI Handle Time: <span class="tag-fill">Fill in</span></li>
+                <li>Voice AI Handle Time: <span class="tag-fill">Fill in</span></li>
+                <li>Chat AI Handle Time: <span class="tag-skip">Informational only</span></li>
               </ul>
               <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">The savings come from deflection reducing agent headcount and using a cheaper bot rate.</p>
             </div>
@@ -2025,7 +2119,8 @@
                 <li>Deflection: <span class="tag-fill">10–80%</span></li>
                 <li>Bot Rate: <span class="tag-fill">Fill in</span></li>
                 <li>Call Rate: <span class="tag-fill">Fill in</span></li>
-                <li>AI Handle Time: <span class="tag-fill">Fill in</span></li>
+                <li>Voice AI Handle Time: <span class="tag-fill">Fill in</span></li>
+                <li>Chat AI Handle Time: <span class="tag-skip">Informational only</span></li>
               </ul>
               <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">Maximum savings: bot deflects calls AND the remaining calls use a cheaper cloud rate.</p>
             </div>
@@ -2042,7 +2137,7 @@
                 <li>Deflection: <span class="tag-skip">0%</span></li>
                 <li>Bot Rate: <span class="tag-skip">ปล่อยเป็น 0</span></li>
                 <li>Call Rate: <span class="tag-fill">กรอก</span></li>
-                <li>AI Handle Time: <span class="tag-skip">ไม่ใช้</span></li>
+                <li>Voice AI Handle Time: <span class="tag-skip">ไม่ใช้</span></li>
               </ul>
               <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">ประหยัดจากอัตราค่าโทรต่อนาทีที่ถูกกว่าและส่วนต่างค่าใช้จ่ายเพิ่มเติม</p>
             </div>
@@ -2054,7 +2149,8 @@
                 <li>Deflection: <span class="tag-fill">10–80%</span></li>
                 <li>Bot Rate: <span class="tag-fill">กรอก</span></li>
                 <li>Call Rate: <span class="tag-skip">ปล่อยเป็น 0</span></li>
-                <li>AI Handle Time: <span class="tag-fill">กรอก</span></li>
+                <li>Voice AI Handle Time: <span class="tag-fill">กรอก</span></li>
+                <li>Chat AI Handle Time: <span class="tag-skip">ข้อมูลอ้างอิงเท่านั้น</span></li>
               </ul>
               <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">ประหยัดจาก deflection ลดจำนวนเอเจนต์และอัตราบอทที่ถูกกว่า</p>
             </div>
@@ -2066,7 +2162,8 @@
                 <li>Deflection: <span class="tag-fill">10–80%</span></li>
                 <li>Bot Rate: <span class="tag-fill">กรอก</span></li>
                 <li>Call Rate: <span class="tag-fill">กรอก</span></li>
-                <li>AI Handle Time: <span class="tag-fill">กรอก</span></li>
+                <li>Voice AI Handle Time: <span class="tag-fill">กรอก</span></li>
+                <li>Chat AI Handle Time: <span class="tag-skip">ข้อมูลอ้างอิงเท่านั้น</span></li>
               </ul>
               <p style="margin-top: 8px; font-size: 12px; color: var(--muted-text);">ประหยัดสูงสุด: บอทรับสายส่วนหนึ่ง + สายที่เหลือใช้ cloud rate ที่ถูกกว่า</p>
             </div>
@@ -2754,7 +2851,7 @@
 
           <div class="faq-item">
             <div class="faq-q">What if the bot is faster than humans?</div>
-            <div class="faq-a">Set the AI Handle Time to a lower number than the human Avg Handle Time. For example, if humans take 3 minutes per call but the bot finishes in 1 minute, enter 1. This reduces the AI cost per call.</div>
+            <div class="faq-a">Set the <strong>Voice AI Handle Time</strong> (in AI Rudder Configuration) to a lower number than the human Avg Handle Time. For example, if humans take 3 minutes per call but the bot finishes in 1 minute, enter 1. This reduces the AI cost per call. Note: Chat AI Handle Time is informational only — chat is billed per session.</div>
           </div>
 
           <div class="faq-item">
@@ -2786,7 +2883,7 @@
 
           <div class="faq-item">
             <div class="faq-q">ถ้าบอทเร็วกว่าคน?</div>
-            <div class="faq-a">ตั้ง AI Handle Time ให้น้อยกว่า Avg Handle Time ของคน เช่น ถ้าคนใช้เวลา 3 นาทีต่อสาย แต่บอทจบใน 1 นาที ให้กรอก 1 จะทำให้ต้นทุน AI ต่อสายลดลง</div>
+            <div class="faq-a">ตั้ง <strong>Voice AI Handle Time</strong> (ในส่วน AI Rudder Configuration) ให้น้อยกว่า Avg Handle Time ของคน เช่น ถ้าคนใช้เวลา 3 นาทีต่อสาย แต่บอทจบใน 1 นาที ให้กรอก 1 จะทำให้ต้นทุน AI ต่อสายลดลง หมายเหตุ: Chat AI Handle Time เป็นข้อมูลอ้างอิงเท่านั้น — แชทคิดค่าบริการต่อ session</div>
           </div>
 
           <div class="faq-item">
