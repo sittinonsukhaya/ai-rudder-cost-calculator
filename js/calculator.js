@@ -33,24 +33,44 @@ export function calculateAdminValue(hoursPerMonth, hourlyRate) {
 }
 
 /**
+ * Calculate weighted average deflection across voice/chat channels
+ * @param {Array} channels - [{id, type, volume, humanHandleTime}]
+ * @param {Object} channelDeflections - {channelId: deflectionRate}
+ * @returns {number} - Weighted average deflection rate (0-1)
+ */
+export function calculateEffectiveDeflection(channels, channelDeflections) {
+  let totalWorkload = 0;
+  let weightedDeflection = 0;
+  (channels || []).forEach(ch => {
+    if (ch.type !== 'voice' && ch.type !== 'chat') return;
+    const workload = (ch.volume || 0) * (ch.humanHandleTime || 1);
+    const deflection = (channelDeflections || {})[ch.id] || 0;
+    totalWorkload += workload;
+    weightedDeflection += workload * deflection;
+  });
+  return totalWorkload > 0 ? weightedDeflection / totalWorkload : 0;
+}
+
+/**
  * Calculate costs from channel rates
- * AI costs are split by deflection rate:
+ * AI costs are split by per-channel deflection rate:
  *   - Bot-handled volume uses aiBot rate (+ aiHandleTime for voice)
  *   - Agent-handled volume uses aiAgent rate (+ humanHandleTime for voice)
  * @param {Array} channels - [{id, type, volume, humanHandleTime}]
  * @param {Object} rates - {channelId: {client, aiBot, aiAgent}}
  * @param {number} aiHandleTime - AI handle time for voice (bot-handled calls)
- * @param {number} deflectionRate - Fraction of volume handled by AI bot (0-1)
+ * @param {Object} channelDeflections - {channelId: deflectionRate} per-channel deflection rates
  * @returns {Object} - {clientTotal, aiTotal}
  */
-export function calculateChannelCosts(channels, rates, aiHandleTime, deflectionRate = 0) {
+export function calculateChannelCosts(channels, rates, aiHandleTime, channelDeflections = {}) {
   let clientTotal = 0;
   let aiTotal = 0;
-  const dr = deflectionRate || 0;
 
   (channels || []).forEach(channel => {
     const rate = (rates || {})[channel.id] || { client: 0, aiBot: 0, aiAgent: 0 };
     const volume = channel.volume || 0;
+    const dr = (channel.type === 'voice' || channel.type === 'chat')
+      ? ((channelDeflections || {})[channel.id] || 0) : 0;
     const botVolume = volume * dr;
     const agentVolume = volume * (1 - dr);
 
@@ -81,7 +101,7 @@ export function calculateChannelCosts(channels, rates, aiHandleTime, deflectionR
  * Calculate ledger totals from dynamic cost items
  * Handles: one-time, monthly, yearly, per-agent
  * @param {Array} items - [{id, name, amount, frequency}]
- * @param {Object} params - {totalAgents, deflectionRate}
+ * @param {Object} params - {totalAgents, effectiveDeflection}
  * @returns {Object} - {capex, monthlyOpex}
  */
 export function calculateLedgerTotals(items, params = {}) {
@@ -89,8 +109,9 @@ export function calculateLedgerTotals(items, params = {}) {
     return { capex: 0, monthlyOpex: 0 };
   }
 
-  const { totalAgents = 0, deflectionRate = 0 } = params;
-  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
+  const { totalAgents = 0, effectiveDeflection = 0, deflectionRate = 0 } = params;
+  const defRate = effectiveDeflection || deflectionRate || 0;
+  const retainedAgents = calculateRetainedAgents(totalAgents, defRate);
 
   let capex = 0;
   let monthlyOpex = 0;
@@ -132,20 +153,23 @@ export function calculateLedgerTotals(items, params = {}) {
  * @param {number} aiHandleTime - Shared AI handle time for voice
  * @param {Array} clientItems - Client additional cost items
  * @param {Array} aiItems - AI additional cost items
- * @param {Object} params - {totalAgents, monthlySalary, deflectionRate, adminHours}
+ * @param {Object} params - {totalAgents, monthlySalary, channelDeflections, adminHours}
  * @returns {Object}
  */
 export function calculateMonthlyCosts(channels, rates, aiHandleTime,
                                        clientItems, aiItems, params) {
   const p = params || {};
 
-  const channelCosts = calculateChannelCosts(channels, rates, aiHandleTime, p.deflectionRate);
-  const clientLedger = calculateLedgerTotals(clientItems, p);
-  const aiLedger = calculateLedgerTotals(aiItems, p);
+  const channelDeflections = p.channelDeflections || {};
+  const effectiveDeflection = calculateEffectiveDeflection(channels, channelDeflections);
+
+  const channelCosts = calculateChannelCosts(channels, rates, aiHandleTime, channelDeflections);
+  const ledgerParams = { totalAgents: p.totalAgents, effectiveDeflection };
+  const clientLedger = calculateLedgerTotals(clientItems, ledgerParams);
+  const aiLedger = calculateLedgerTotals(aiItems, ledgerParams);
 
   const totalAgents = p.totalAgents || 0;
-  const deflectionRate = p.deflectionRate || 0;
-  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
+  const retainedAgents = calculateRetainedAgents(totalAgents, effectiveDeflection);
   const agentsReplaced = totalAgents - retainedAgents;
 
   const adminHours = p.adminHours || 0;
@@ -258,12 +282,13 @@ export function calculateDashboardMetrics(
 
 /**
  * Calculate efficiency gains (soft savings) — separate from direct cost savings
- * @param {Object} params - {totalAgents, monthlySalary, deflectionRate, adminHours, channels}
+ * @param {Object} params - {totalAgents, monthlySalary, channelDeflections, adminHours, channels}
  * @returns {Object}
  */
 export function calculateEfficiencyGains(params) {
-  const { totalAgents, monthlySalary, deflectionRate, adminHours, channels } = params || {};
-  const retainedAgents = calculateRetainedAgents(totalAgents, deflectionRate);
+  const { totalAgents, monthlySalary, channelDeflections, adminHours, channels } = params || {};
+  const effectiveDeflection = calculateEffectiveDeflection(channels, channelDeflections);
+  const retainedAgents = calculateRetainedAgents(totalAgents, effectiveDeflection);
   const agentsReplaced = (totalAgents || 0) - retainedAgents;
   const hourlyRate = (monthlySalary || 0) / 160;
   const hoursValue = (adminHours || 0) * hourlyRate;
@@ -290,7 +315,7 @@ export function calculateEfficiencyGains(params) {
   return {
     aiCapacity: agentsReplaced,
     totalAgents: totalAgents || 0,
-    automatedPct: Math.round((deflectionRate || 0) * 100),
+    automatedPct: Math.round((effectiveDeflection || 0) * 100),
     hoursReclaimed: adminHours || 0,
     agentEquivalent: parseFloat(agentEquivalent),
     extraCapacity,

@@ -23,6 +23,7 @@ import { saveScenario, loadScenario, listScenarios, deleteScenario } from './sto
 import {
   renderChannels,
   renderRates,
+  renderChannelDeflections,
   renderCostItems,
   renderDashboard,
   renderEfficiencyGains,
@@ -36,6 +37,8 @@ import { t, setLanguage, getLanguage, translatePage } from './i18n.js';
 // ===== DOM References =====
 const channelsContainer = document.getElementById('channelsContainer');
 const ratesContainer = document.getElementById('ratesContainer');
+const channelDeflectionsContainer = document.getElementById('channelDeflections');
+const aiConfigCard = document.getElementById('aiConfigCard');
 const clientItemsContainer = document.getElementById('clientItems');
 const aiItemsContainer = document.getElementById('aiItems');
 
@@ -53,7 +56,7 @@ function recalculate() {
     {
       totalAgents: state.totalAgents,
       monthlySalary: state.monthlySalary,
-      deflectionRate: state.deflectionRate,
+      channelDeflections: state.channelDeflections,
       adminHours: state.adminHours
     }
   );
@@ -76,7 +79,7 @@ function recalculate() {
   const efficiencyGains = calculateEfficiencyGains({
     totalAgents: state.totalAgents,
     monthlySalary: state.monthlySalary,
-    deflectionRate: state.deflectionRate,
+    channelDeflections: state.channelDeflections,
     adminHours: state.adminHours,
     channels: state.channels
   });
@@ -103,6 +106,8 @@ function renderStructure() {
   const state = getState();
   renderChannels(channelsContainer, state.channels);
   renderRates(ratesContainer, state.channels, state.rates);
+  renderChannelDeflections(channelDeflectionsContainer, state.channels, state.channelDeflections);
+  updateAiConfigVisibility(state.channels);
   renderCostItems(clientItemsContainer, state.clientItems, 'client');
   renderCostItems(aiItemsContainer, state.aiItems, 'ai');
 }
@@ -115,6 +120,18 @@ function renderChannelsAndRates() {
   const state = getState();
   renderChannels(channelsContainer, state.channels);
   renderRates(ratesContainer, state.channels, state.rates);
+  renderChannelDeflections(channelDeflectionsContainer, state.channels, state.channelDeflections);
+  updateAiConfigVisibility(state.channels);
+}
+
+/**
+ * Show/hide Section 4 card based on voice/chat channel presence
+ */
+function updateAiConfigVisibility(channels) {
+  const hasVoiceChat = (channels || []).some(ch => ch.type === 'voice' || ch.type === 'chat');
+  if (aiConfigCard) {
+    aiConfigCard.style.display = hasVoiceChat ? '' : 'none';
+  }
 }
 
 // ===== Language Switch =====
@@ -214,7 +231,19 @@ channelsContainer.addEventListener('change', (e) => {
     rates[channelId] = { client: 0, aiBot: 0, aiAgent: 0 };
   }
 
-  setState({ channels, rates });
+  // Manage deflection entries based on type change
+  const channelDeflections = { ...state.channelDeflections };
+  if (el.value === 'voice' || el.value === 'chat') {
+    // Add default deflection if not present
+    if (channelDeflections[channelId] === undefined) {
+      channelDeflections[channelId] = 0.20;
+    }
+  } else {
+    // Remove deflection for non-voice/chat types
+    delete channelDeflections[channelId];
+  }
+
+  setState({ channels, rates, channelDeflections });
   // Structural change: re-render channels and rates
   renderChannelsAndRates();
 });
@@ -229,7 +258,9 @@ channelsContainer.addEventListener('click', (e) => {
   const channels = state.channels.filter(ch => ch.id !== channelId);
   const rates = { ...state.rates };
   delete rates[channelId];
-  setState({ channels, rates });
+  const channelDeflections = { ...state.channelDeflections };
+  delete channelDeflections[channelId];
+  setState({ channels, rates, channelDeflections });
   // Structural change: re-render channels and rates
   renderChannelsAndRates();
 });
@@ -246,7 +277,8 @@ document.getElementById('addChannelBtn').addEventListener('click', () => {
     humanHandleTime: 6
   }];
   const rates = { ...state.rates, [newId]: { client: 0, aiBot: 0, aiAgent: 0 } };
-  setState({ channels, rates });
+  const channelDeflections = { ...state.channelDeflections, [newId]: 0.20 };
+  setState({ channels, rates, channelDeflections });
   // Structural change: re-render channels and rates
   renderChannelsAndRates();
 });
@@ -345,9 +377,22 @@ document.querySelector('.cost-columns').addEventListener('click', (e) => {
   }
 });
 
-// --- Section 4: AI Rudder Configuration ---
-document.getElementById('deflectionRate').addEventListener('input', (e) => {
-  setState({ deflectionRate: parseFloat(e.target.value) / 100 || 0 });
+// --- Section 4: AI Rudder Configuration - Per-Channel Deflection ---
+channelDeflectionsContainer.addEventListener('input', (e) => {
+  const el = e.target;
+  if (el.dataset.field !== 'deflection') return;
+  const channelId = Number(el.dataset.channelId);
+  if (!channelId) return;
+
+  const state = getState();
+  const channelDeflections = { ...state.channelDeflections, [channelId]: parseFloat(el.value) / 100 || 0 };
+  setState({ channelDeflections });
+
+  // Update the value display next to the slider
+  const valueSpan = el.previousElementSibling?.querySelector('.deflection-value');
+  if (valueSpan) {
+    valueSpan.textContent = `${el.value}%`;
+  }
 });
 
 document.getElementById('aiHandleTime').addEventListener('input', (e) => {
@@ -419,6 +464,21 @@ document.getElementById('loadScenarioBtn').addEventListener('click', () => {
         })
       );
 
+      // Migrate old global deflectionRate to per-channel deflections
+      let channelDeflections = scenario.channelDeflections;
+      if (!channelDeflections && scenario.deflectionRate !== undefined) {
+        channelDeflections = {};
+        const scenarioChannels = scenario.channels || [];
+        scenarioChannels.forEach(ch => {
+          if (ch.type === 'voice' || ch.type === 'chat') {
+            channelDeflections[ch.id] = scenario.deflectionRate;
+          }
+        });
+      }
+      if (!channelDeflections) {
+        channelDeflections = { 1: 0.20 };
+      }
+
       // Map loaded scenario back into state
       setState({
         totalAgents: scenario.totalAgents || 100,
@@ -435,7 +495,7 @@ document.getElementById('loadScenarioBtn').addEventListener('click', () => {
           ...item,
           id: item.id || Date.now() + Math.random()
         })),
-        deflectionRate: scenario.deflectionRate || 0.20,
+        channelDeflections,
         adminHours: scenario.adminHours || 160
       });
 
@@ -482,7 +542,6 @@ function syncFixedInputs() {
   const state = getState();
   document.getElementById('totalAgents').value = state.totalAgents;
   document.getElementById('monthlySalary').value = state.monthlySalary;
-  document.getElementById('deflectionRate').value = Math.round(state.deflectionRate * 100);
   document.getElementById('aiHandleTime').value = state.aiHandleTime;
   document.getElementById('chatAiHandleTime').value = state.chatAiHandleTime;
   document.getElementById('adminHours').value = state.adminHours;

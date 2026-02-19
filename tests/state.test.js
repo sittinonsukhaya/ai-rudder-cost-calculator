@@ -19,7 +19,7 @@ describe('getState', () => {
     expect(state.monthlySalary).toBe(25000);
     expect(state.channels).toHaveLength(1);
     expect(state.channels[0].type).toBe('voice');
-    expect(state.deflectionRate).toBe(0.20);
+    expect(state.channelDeflections).toEqual({ 1: 0.20 });
     expect(state.aiHandleTime).toBe(3.5);
   });
 
@@ -59,11 +59,11 @@ describe('setState', () => {
   });
 
   test('can update multiple fields at once', () => {
-    setState({ totalAgents: 50, monthlySalary: 30000, deflectionRate: 0.3 });
+    setState({ totalAgents: 50, monthlySalary: 30000, channelDeflections: { 1: 0.3 } });
     const state = getState();
     expect(state.totalAgents).toBe(50);
     expect(state.monthlySalary).toBe(30000);
-    expect(state.deflectionRate).toBe(0.3);
+    expect(state.channelDeflections).toEqual({ 1: 0.3 });
   });
 });
 
@@ -121,7 +121,7 @@ describe('resetState', () => {
       monthlySalary: 50000,
       channels: [],
       rates: {},
-      deflectionRate: 0.5
+      channelDeflections: { 1: 0.5 }
     });
 
     resetState();
@@ -131,7 +131,7 @@ describe('resetState', () => {
     expect(state.totalAgents).toBe(defaults.totalAgents);
     expect(state.monthlySalary).toBe(defaults.monthlySalary);
     expect(state.channels).toEqual(defaults.channels);
-    expect(state.deflectionRate).toBe(defaults.deflectionRate);
+    expect(state.channelDeflections).toEqual(defaults.channelDeflections);
   });
 
   test('notifies subscribers on reset', () => {

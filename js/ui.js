@@ -58,7 +58,7 @@ export function renderChannels(container, channels) {
     const hasHandleTime = config.hasHandleTime;
     const fieldsClass = hasHandleTime ? 'channel-card-fields three-col' : 'channel-card-fields';
 
-    // Use voice-specific or chat-specific handle time labels
+    // Use voice-specific or chat-specific handle time labels (descriptions removed for cleaner UI)
     const handleTimeLabel = channel.type === 'chat' ? t('field.chatHandleTime') : t('field.handleTime');
     const handleTimeDesc = channel.type === 'chat' ? t('field.chatHandleTimeDesc') : t('field.handleTimeDesc');
 
@@ -108,6 +108,54 @@ export function renderChannels(container, channels) {
 }
 
 /**
+ * Render per-channel deflection sliders in Section 4
+ * Only voice/chat channels get deflection sliders
+ */
+export function renderChannelDeflections(container, channels, channelDeflections) {
+  if (!container) return;
+
+  const channelTypes = getChannelTypes();
+  const voiceChatChannels = (channels || []).filter(ch => ch.type === 'voice' || ch.type === 'chat');
+
+  if (voiceChatChannels.length === 0) {
+    container.innerHTML = `<p style="color: var(--muted-text); font-size: 14px;">${t('field.noDeflectionChannels')}</p>`;
+    return;
+  }
+
+  // Count channels per type for numbered labels
+  const typeCounts = {};
+  voiceChatChannels.forEach(c => { typeCounts[c.type] = (typeCounts[c.type] || 0) + 1; });
+  const typeIndex = {};
+
+  container.innerHTML = voiceChatChannels.map(channel => {
+    const config = channelTypes[channel.type] || channelTypes.voice;
+    typeIndex[channel.type] = (typeIndex[channel.type] || 0) + 1;
+    const label = channel.name
+      ? escapeHTML(channel.name)
+      : (typeCounts[channel.type] > 1
+        ? `${config.label} #${typeIndex[channel.type]}`
+        : config.label);
+
+    const deflection = (channelDeflections || {})[channel.id] || 0;
+    const pct = Math.round(deflection * 100);
+
+    return `
+      <div style="margin-bottom: 16px;">
+        <div class="slider-container">
+          <label class="field-label" style="margin-bottom: 0;">
+            ${label}
+            <span class="field-description">${t('field.channelDeflectionDesc')}</span>
+          </label>
+          <span class="deflection-value">${pct}%</span>
+        </div>
+        <input type="range" class="slider" min="0" max="80" value="${pct}" step="1"
+               data-channel-id="${channel.id}" data-field="deflection">
+      </div>
+    `;
+  }).join('');
+}
+
+/**
  * Render rates comparison table in Section 2
  * Adds numbered labels when multiple channels of the same type exist
  */
@@ -133,9 +181,10 @@ export function renderRates(container, channels, rates) {
       <thead>
         <tr>
           <th>${t('rates.channel')}</th>
+          <th>${t('rates.unit')}</th>
           <th>${t('rates.clientRate')}</th>
-          <th>${t('rates.aiBotRate')}</th>
           <th>${t('rates.aiAgentRate')}</th>
+          <th>${t('rates.aiBotRate')}</th>
         </tr>
       </thead>
       <tbody>
@@ -155,21 +204,19 @@ export function renderRates(container, channels, rates) {
 
     html += `
       <tr data-channel-id="${channel.id}">
-        <td>
-          <span class="channel-label">${label}</span>
-          <span class="unit">${config.unit}</span>
-        </td>
+        <td><span class="channel-label">${label}</span></td>
+        <td><span class="unit">${config.unit}</span></td>
         <td>
           <input type="number" value="${rate.client}" min="0" step="0.1"
                  data-channel-id="${channel.id}" data-rate-side="client">
         </td>
         <td>
-          <input type="number" value="${rate.aiBot}" min="0" step="0.1"
-                 data-channel-id="${channel.id}" data-rate-side="aiBot">
-        </td>
-        <td>
           <input type="number" value="${rate.aiAgent}" min="0" step="0.1"
                  data-channel-id="${channel.id}" data-rate-side="aiAgent">
+        </td>
+        <td>
+          <input type="number" value="${rate.aiBot}" min="0" step="0.1"
+                 data-channel-id="${channel.id}" data-rate-side="aiBot">
         </td>
       </tr>
     `;
@@ -294,8 +341,7 @@ export function renderEfficiencyGains(data) {
   // Estimated Value
   setIfExists('metricEfficiencyValue', formatCurrency(data.estimatedValue));
 
-  // Deflection slider display (still in input section)
-  setIfExists('deflectionValue', `${data.automatedPct}%`);
+  // Per-channel deflection sliders have their own displays
 }
 
 /**

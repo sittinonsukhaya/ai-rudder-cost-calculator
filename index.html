@@ -84,7 +84,7 @@
             </div>
           </div>
 
-          <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 12px;" data-i18n="section.channels">Channels</h3>
+          <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 12px;" data-i18n="section.channels">Service Channels</h3>
           <div id="channelsContainer">
             <!-- Rendered by ui.js -->
           </div>
@@ -98,8 +98,8 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h2 data-i18n="section.rates">Rates Comparison</h2>
-              <p class="card-description" data-i18n="section.ratesDesc">Compare per-interaction costs. AI Bot Rate applies to deflected interactions, AI Agent Rate to human-assisted ones.</p>
+              <h2 data-i18n="section.rates">Rate Card</h2>
+              <p class="card-description" data-i18n="section.ratesDesc">Known rates for each service channel</p>
             </div>
           </div>
           <div id="ratesContainer">
@@ -140,24 +140,17 @@
         </div>
 
         <!-- Section 4: AI Rudder Configuration -->
-        <div class="card">
+        <div class="card" id="aiConfigCard">
           <div class="card-header">
             <div>
-              <h2 data-i18n="section.aiConfig">AI Rudder Configuration</h2>
-              <p class="card-description" data-i18n="section.aiConfigDesc">Configure how AI Rudder handles customer interactions</p>
+              <h2 data-i18n="section.aiConfig">AI Rudder Operation</h2>
+              <p class="card-description" data-i18n="section.aiConfigDesc">Describe Possible Operation with AI Rudder Solution</p>
             </div>
           </div>
 
-          <!-- Deflection Rate -->
-          <div style="margin-bottom: 20px;">
-            <div class="slider-container">
-              <label class="field-label" style="margin-bottom: 0;">
-                <span data-i18n="field.deflectionRate">AI Deflection Rate</span>
-                <span class="field-description" data-i18n="field.deflectionRateDesc">Percentage of interactions fully handled by AI without human intervention</span>
-              </label>
-              <span id="deflectionValue" class="deflection-value">20%</span>
-            </div>
-            <input type="range" id="deflectionRate" class="slider" min="0" max="80" value="20" step="1">
+          <!-- Per-Channel Deflection Rates -->
+          <div id="channelDeflections" style="margin-bottom: 20px;">
+            <!-- Rendered dynamically by ui.js -->
           </div>
 
           <!-- AI Handle Times -->

@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import {
   calculateRetainedAgents,
   calculateAdminValue,
+  calculateEffectiveDeflection,
   calculateChannelCosts,
   calculateLedgerTotals,
   calculateMonthlyCosts,
@@ -51,13 +52,82 @@ describe('calculateAdminValue', () => {
   });
 });
 
+describe('calculateEffectiveDeflection', () => {
+  test('returns weighted average across voice/chat channels', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 2000, humanHandleTime: 1 }
+    ];
+    const channelDeflections = { 1: 0.3, 2: 0.1 };
+    const result = calculateEffectiveDeflection(channels, channelDeflections);
+
+    // Voice workload: 5000 * 6 = 30000
+    // Chat workload: 2000 * 1 = 2000
+    // Total workload: 32000
+    // Weighted: (30000 * 0.3 + 2000 * 0.1) / 32000 = (9000 + 200) / 32000 = 9200/32000 = 0.2875
+    expect(result).toBeCloseTo(0.2875);
+  });
+
+  test('returns 0 when no voice/chat channels', () => {
+    const channels = [
+      { id: 1, type: 'sms', volume: 5000 },
+      { id: 2, type: 'ivr', volume: 2000, humanHandleTime: 3 }
+    ];
+    expect(calculateEffectiveDeflection(channels, { 1: 0.3, 2: 0.1 })).toBe(0);
+  });
+
+  test('returns 0 with empty channels', () => {
+    expect(calculateEffectiveDeflection([], {})).toBe(0);
+  });
+
+  test('returns 0 with null channels', () => {
+    expect(calculateEffectiveDeflection(null, null)).toBe(0);
+  });
+
+  test('returns 0 when all voice/chat channels have zero volume', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 0, humanHandleTime: 6 }
+    ];
+    expect(calculateEffectiveDeflection(channels, { 1: 0.3 })).toBe(0);
+  });
+
+  test('defaults missing channel deflection to 0', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 2000, humanHandleTime: 1 }
+    ];
+    // Only channel 1 has deflection; channel 2 defaults to 0
+    const result = calculateEffectiveDeflection(channels, { 1: 0.3 });
+
+    // Voice workload: 30000, Chat workload: 2000
+    // Weighted: (30000*0.3 + 2000*0) / 32000 = 9000/32000 = 0.28125
+    expect(result).toBeCloseTo(0.28125);
+  });
+
+  test('uses humanHandleTime=1 default for chat channels', () => {
+    const channels = [
+      { id: 1, type: 'chat', volume: 1000 }  // no humanHandleTime
+    ];
+    const result = calculateEffectiveDeflection(channels, { 1: 0.5 });
+    // workload: 1000 * 1 = 1000, weighted: 1000*0.5 / 1000 = 0.5
+    expect(result).toBe(0.5);
+  });
+
+  test('single channel returns its deflection directly', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 }
+    ];
+    expect(calculateEffectiveDeflection(channels, { 1: 0.2 })).toBeCloseTo(0.2);
+  });
+});
+
 describe('calculateChannelCosts', () => {
   test('voice with zero deflection routes all through agent rate', () => {
     const channels = [
       { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 }
     ];
     const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0);
+    const result = calculateChannelCosts(channels, rates, 3.5, {});
 
     // Client: 2 * 10000 * 6 = 120,000
     expect(result.clientTotal).toBe(120000);
@@ -65,12 +135,12 @@ describe('calculateChannelCosts', () => {
     expect(result.aiTotal).toBe(300000);
   });
 
-  test('voice splits AI cost between bot and agent using deflection rate', () => {
+  test('voice splits AI cost between bot and agent using per-channel deflection', () => {
     const channels = [
       { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 }
     ];
     const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.2 });
 
     // Client: 2 * 10000 * 6 = 120,000
     expect(result.clientTotal).toBe(120000);
@@ -86,7 +156,7 @@ describe('calculateChannelCosts', () => {
     ];
     const rates = { 1: { client: 1, aiBot: 1, aiAgent: 1 } };
     // Same rate for both, so difference is purely handle time
-    const result = calculateChannelCosts(channels, rates, 2, 0.5);
+    const result = calculateChannelCosts(channels, rates, 2, { 1: 0.5 });
 
     // Bot: 1 * 500 * 2 = 1,000
     // Agent: 1 * 500 * 10 = 5,000
@@ -98,7 +168,7 @@ describe('calculateChannelCosts', () => {
       { id: 1, type: 'sms', volume: 50000 }
     ];
     const rates = { 1: { client: 0.5, aiBot: 0, aiAgent: 0.4 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.2 });
 
     // Client: 0.5 * 50000 = 25,000
     expect(result.clientTotal).toBe(25000);
@@ -111,7 +181,7 @@ describe('calculateChannelCosts', () => {
       { id: 1, type: 'sms', volume: 10000 }
     ];
     const rates = { 1: { client: 0.5, aiBot: 0.2, aiAgent: 0.3 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.5);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.5 });
 
     // Client: 0.5 * 10000 = 5,000
     expect(result.clientTotal).toBe(5000);
@@ -124,7 +194,7 @@ describe('calculateChannelCosts', () => {
       { id: 1, type: 'ivr', volume: 20000, humanHandleTime: 2 }
     ];
     const rates = { 1: { client: 1.5, aiBot: 0, aiAgent: 1.0 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.2 });
 
     // Client: 1.5 * 20000 * 2 = 60,000
     expect(result.clientTotal).toBe(60000);
@@ -139,8 +209,8 @@ describe('calculateChannelCosts', () => {
     ];
     const rates = { 1: { client: 2, aiBot: 0, aiAgent: 1 } };
 
-    const resultLow = calculateChannelCosts(channels, rates, 3.5, 0.1);
-    const resultHigh = calculateChannelCosts(channels, rates, 3.5, 0.8);
+    const resultLow = calculateChannelCosts(channels, rates, 3.5, { 1: 0.1 });
+    const resultHigh = calculateChannelCosts(channels, rates, 3.5, { 1: 0.8 });
 
     // Both should produce the same AI total since deflection doesn't apply
     expect(resultLow.aiTotal).toBe(resultHigh.aiTotal);
@@ -152,7 +222,7 @@ describe('calculateChannelCosts', () => {
       { id: 1, type: 'chat', volume: 2000 }
     ];
     const rates = { 1: { client: 50, aiBot: 15, aiAgent: 30 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.3);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.3 });
 
     // Client: 50 * 2000 = 100,000
     expect(result.clientTotal).toBe(100000);
@@ -161,7 +231,7 @@ describe('calculateChannelCosts', () => {
     expect(result.aiTotal).toBe(51000);
   });
 
-  test('handles multiple channels: voice+chat use deflection, SMS does not', () => {
+  test('handles multiple channels with per-channel deflection', () => {
     const channels = [
       { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
       { id: 2, type: 'sms', volume: 20000 },
@@ -172,7 +242,7 @@ describe('calculateChannelCosts', () => {
       2: { client: 0.5, aiBot: 0.2, aiAgent: 0.4 },
       3: { client: 50, aiBot: 15, aiAgent: 30 }
     };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.2, 3: 0.2 });
 
     // Voice client: 2 * 5000 * 6 = 60,000
     // SMS client: 0.5 * 20000 = 10,000
@@ -185,24 +255,71 @@ describe('calculateChannelCosts', () => {
     expect(result.aiTotal).toBe(216500);
   });
 
+  test('per-channel deflection: voice at 30%, chat at 10%', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 5000 }
+    ];
+    const rates = {
+      1: { client: 2, aiBot: 1, aiAgent: 5 },
+      2: { client: 50, aiBot: 15, aiAgent: 30 }
+    };
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.3, 2: 0.1 });
+
+    // Voice: client=2*10000*6=120000
+    // Voice AI: bot(1*3000*3.5=10500) + agent(5*7000*6=210000) = 220500
+    // Chat: client=50*5000=250000
+    // Chat AI: bot(15*500=7500) + agent(30*4500=135000) = 142500
+    expect(result.clientTotal).toBe(370000);
+    expect(result.aiTotal).toBe(363000);
+  });
+
+  test('zero deflection on one channel, nonzero on another', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 5000 }
+    ];
+    const rates = {
+      1: { client: 2, aiBot: 1, aiAgent: 5 },
+      2: { client: 50, aiBot: 15, aiAgent: 30 }
+    };
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0, 2: 0.5 });
+
+    // Voice AI: all agent since deflection=0: 5*10000*6 = 300000
+    // Chat AI: bot(15*2500=37500) + agent(30*2500=75000) = 112500
+    expect(result.aiTotal).toBe(412500);
+  });
+
+  test('missing channel in deflection map defaults to 0', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 }
+    ];
+    const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
+    // Channel 1 not in deflections map → defaults to 0
+    const result = calculateChannelCosts(channels, rates, 3.5, { 99: 0.5 });
+
+    // All through agent: 5*10000*6 = 300000
+    expect(result.aiTotal).toBe(300000);
+  });
+
   test('handles missing rates for a channel', () => {
     const channels = [
       { id: 99, type: 'voice', volume: 1000, humanHandleTime: 5 }
     ];
-    const result = calculateChannelCosts(channels, {}, 3.5, 0.2);
+    const result = calculateChannelCosts(channels, {}, 3.5, { 99: 0.2 });
 
     expect(result.clientTotal).toBe(0);
     expect(result.aiTotal).toBe(0);
   });
 
   test('handles empty channels array', () => {
-    const result = calculateChannelCosts([], {}, 3.5, 0.2);
+    const result = calculateChannelCosts([], {}, 3.5, { 1: 0.2 });
     expect(result.clientTotal).toBe(0);
     expect(result.aiTotal).toBe(0);
   });
 
   test('handles null channels', () => {
-    const result = calculateChannelCosts(null, null, 3.5, 0.2);
+    const result = calculateChannelCosts(null, null, 3.5, null);
     expect(result.clientTotal).toBe(0);
     expect(result.aiTotal).toBe(0);
   });
@@ -212,7 +329,7 @@ describe('calculateChannelCosts', () => {
       { id: 1, type: 'voice', volume: 0, humanHandleTime: 6 }
     ];
     const rates = { 1: { client: 2, aiBot: 1, aiAgent: 5 } };
-    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+    const result = calculateChannelCosts(channels, rates, 3.5, { 1: 0.2 });
 
     expect(result.clientTotal).toBe(0);
     expect(result.aiTotal).toBe(0);
@@ -253,11 +370,11 @@ describe('calculateLedgerTotals', () => {
     expect(result.monthlyOpex).toBe(10000);
   });
 
-  test('per-agent cost calculated correctly with deflection', () => {
+  test('per-agent cost calculated correctly with effective deflection', () => {
     const items = [
       { name: 'CRM License', amount: 2000, frequency: 'per agent' }
     ];
-    const params = { totalAgents: 100, deflectionRate: 0.2 };
+    const params = { totalAgents: 100, effectiveDeflection: 0.2 };
     const result = calculateLedgerTotals(items, params);
     expect(result.monthlyOpex).toBe(2000 * 80);
   });
@@ -266,9 +383,18 @@ describe('calculateLedgerTotals', () => {
     const items = [
       { name: 'CRM License', amount: 2000, frequency: 'per agent' }
     ];
-    const params = { totalAgents: 100, deflectionRate: 0 };
+    const params = { totalAgents: 100, effectiveDeflection: 0 };
     const result = calculateLedgerTotals(items, params);
     expect(result.monthlyOpex).toBe(2000 * 100);
+  });
+
+  test('per-agent cost with legacy deflectionRate param', () => {
+    const items = [
+      { name: 'CRM License', amount: 2000, frequency: 'per agent' }
+    ];
+    const params = { totalAgents: 100, deflectionRate: 0.2 };
+    const result = calculateLedgerTotals(items, params);
+    expect(result.monthlyOpex).toBe(2000 * 80);
   });
 
   test('handles multiple items with different frequencies', () => {
@@ -312,7 +438,7 @@ describe('calculateMonthlyCosts', () => {
       { name: 'Setup', amount: 50000, frequency: 'one-time' },
       { name: 'Platform', amount: 30000, frequency: 'monthly' }
     ];
-    const params = { totalAgents: 100, monthlySalary: 25000, deflectionRate: 0.2 };
+    const params = { totalAgents: 100, monthlySalary: 25000, channelDeflections: { 1: 0.2 } };
 
     const result = calculateMonthlyCosts(channels, rates, 3.5, clientItems, aiItems, params);
 
@@ -328,8 +454,11 @@ describe('calculateMonthlyCosts', () => {
   });
 
   test('includes agent salaries in monthly totals', () => {
-    const params = { totalAgents: 50, monthlySalary: 30000, deflectionRate: 0.2 };
-    const result = calculateMonthlyCosts([], {}, 0, [], [], params);
+    const channels = [
+      { id: 1, type: 'voice', volume: 1000, humanHandleTime: 6 }
+    ];
+    const params = { totalAgents: 50, monthlySalary: 30000, channelDeflections: { 1: 0.2 } };
+    const result = calculateMonthlyCosts(channels, {}, 0, [], [], params);
 
     // Client payroll: 50 * 30000 = 1,500,000
     expect(result.clientMonthly).toBe(1500000);
@@ -339,14 +468,17 @@ describe('calculateMonthlyCosts', () => {
   });
 
   test('calculates admin value correctly (derived from salary)', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 1000, humanHandleTime: 6 }
+    ];
     const params = {
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2 },
       adminHours: 160
     };
 
-    const result = calculateMonthlyCosts([], {}, 3.5, [], [], params);
+    const result = calculateMonthlyCosts(channels, {}, 3.5, [], [], params);
     // hourlyRate = 25000 / 160 = 156.25
     // adminValue = 160 * 156.25 = 25000
     expect(result.adminValue).toBe(25000);
@@ -542,8 +674,8 @@ describe('formatNumber', () => {
   });
 });
 
-describe('Real-world scenario: Multi-channel call center with split rates', () => {
-  test('Voice + Chat channels with 100 agents, 20% deflection, split AI rates', () => {
+describe('Real-world scenario: Multi-channel call center with per-channel deflection', () => {
+  test('Voice + Chat channels with 100 agents, per-channel deflection, split AI rates', () => {
     const channels = [
       { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
       { id: 2, type: 'chat', volume: 2000 }
@@ -564,7 +696,7 @@ describe('Real-world scenario: Multi-channel call center with split rates', () =
     const params = {
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2, 2: 0.2 },
       adminHours: 160
     };
 
@@ -573,6 +705,10 @@ describe('Real-world scenario: Multi-channel call center with split rates', () =
     // Channel costs:
     // Voice client: 2 * 5000 * 6 = 60,000
     // Chat client: 50 * 2000 = 100,000
+    // Effective deflection for ledger:
+    //   Voice workload: 5000*6=30000, Chat workload: 2000*1=2000
+    //   Weighted: (30000*0.2 + 2000*0.2)/(30000+2000) = 6400/32000 = 0.2
+    // retainedAgents = ceil(100 * (1-0.2)) = 80
     // Ledger client: CRM(2000*80=160,000) + PBX(120000/12=10,000) = 170,000
     // Agent payroll: 100 * 25000 = 2,500,000
     // Total client: 60,000 + 100,000 + 170,000 + 2,500,000 = 2,830,000
@@ -611,7 +747,6 @@ describe('Real-world scenario: Multi-channel call center with split rates', () =
     expect(metrics.initialInvestment).toBe(50000);
     expect(metrics.breakEvenMonth).toBe(1);
 
-    // ROI: year1Net = (2830000-2327500)*12 - 50000 + 0 = 6030000 - 50000 = 5980000... let's compute:
     // year1Client = 0 + 2830000*12 = 33,960,000
     // year1AI = 50000 + 2327500*12 = 50000 + 27,930,000 = 27,980,000
     // year1Net = 33960000 - 27980000 = 5,980,000
@@ -626,13 +761,16 @@ describe('Real-world scenario: Multi-channel call center with split rates', () =
 });
 
 describe('calculateEfficiencyGains', () => {
-  test('calculates AI capacity from deflection', () => {
+  test('calculates AI capacity from per-channel deflection', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 }
+    ];
     const result = calculateEfficiencyGains({
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2 },
       adminHours: 160,
-      channels: []
+      channels
     });
 
     expect(result.aiCapacity).toBe(20);
@@ -641,12 +779,15 @@ describe('calculateEfficiencyGains', () => {
   });
 
   test('calculates hours reclaimed and agent equivalent', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 }
+    ];
     const result = calculateEfficiencyGains({
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2 },
       adminHours: 160,
-      channels: []
+      channels
     });
 
     expect(result.hoursReclaimed).toBe(160);
@@ -655,15 +796,16 @@ describe('calculateEfficiencyGains', () => {
   });
 
   test('calculates extra serving capacity with voice+chat blended handle time', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 2000, humanHandleTime: 10 }
+    ];
     const result = calculateEfficiencyGains({
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2, 2: 0.2 },
       adminHours: 160,
-      channels: [
-        { type: 'voice', volume: 5000, humanHandleTime: 6 },
-        { type: 'chat', volume: 2000, humanHandleTime: 10 }
-      ]
+      channels
     });
 
     // Blended: (5000*6 + 2000*10) / (5000+2000) = (30000+20000)/7000 = 50000/7000 ≈ 7.14
@@ -674,15 +816,16 @@ describe('calculateEfficiencyGains', () => {
   });
 
   test('excludes SMS from handle time calculation', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 1000, humanHandleTime: 5 },
+      { id: 2, type: 'sms', volume: 5000, humanHandleTime: 0 }
+    ];
     const result = calculateEfficiencyGains({
       totalAgents: 50,
       monthlySalary: 30000,
-      deflectionRate: 0.3,
+      channelDeflections: { 1: 0.3 },
       adminHours: 80,
-      channels: [
-        { type: 'voice', volume: 1000, humanHandleTime: 5 },
-        { type: 'sms', volume: 5000, humanHandleTime: 0 }
-      ]
+      channels
     });
 
     // Only voice counted: blended = 5 min
@@ -691,12 +834,15 @@ describe('calculateEfficiencyGains', () => {
   });
 
   test('calculates capacity increase percentage', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 }
+    ];
     const result = calculateEfficiencyGains({
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2 },
       adminHours: 160,
-      channels: []
+      channels
     });
 
     // retainedAgents = 80, capacityBase = 80*160 = 12800
@@ -705,12 +851,15 @@ describe('calculateEfficiencyGains', () => {
   });
 
   test('calculates estimated value from salary', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 }
+    ];
     const result = calculateEfficiencyGains({
       totalAgents: 100,
       monthlySalary: 25000,
-      deflectionRate: 0.2,
+      channelDeflections: { 1: 0.2 },
       adminHours: 160,
-      channels: []
+      channels
     });
 
     // hourlyRate = 25000/160 = 156.25
@@ -728,6 +877,28 @@ describe('calculateEfficiencyGains', () => {
     expect(result.extraCapacity).toBe(0);
     expect(result.capacityIncrease).toBe(0);
     expect(result.estimatedValue).toBe(0);
+  });
+
+  test('weighted deflection across channels with different rates', () => {
+    const channels = [
+      { id: 1, type: 'voice', volume: 10000, humanHandleTime: 6 },
+      { id: 2, type: 'chat', volume: 5000, humanHandleTime: 1 }
+    ];
+    const result = calculateEfficiencyGains({
+      totalAgents: 100,
+      monthlySalary: 25000,
+      channelDeflections: { 1: 0.3, 2: 0.1 },
+      adminHours: 160,
+      channels
+    });
+
+    // effectiveDeflection:
+    //   voice workload: 10000*6=60000, chat workload: 5000*1=5000
+    //   weighted: (60000*0.3 + 5000*0.1)/65000 = (18000+500)/65000 ≈ 0.2846
+    //   automatedPct = round(0.2846 * 100) = 28
+    expect(result.automatedPct).toBe(28);
+    // retainedAgents = ceil(100 * (1-0.2846)) = ceil(71.54) = 72
+    expect(result.aiCapacity).toBe(100 - 72); // 28
   });
 });
 

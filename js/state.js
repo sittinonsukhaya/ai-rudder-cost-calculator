@@ -31,7 +31,7 @@ const defaultState = {
 
   // Section 4: Efficiency Offset
   // hourlyRate is derived from monthlySalary / 160
-  deflectionRate: 0.20,
+  channelDeflections: { 1: 0.20 },
   adminHours: 160
 };
 

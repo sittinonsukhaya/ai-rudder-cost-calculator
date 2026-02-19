@@ -8,9 +8,10 @@ This document locks down terminology, code standards, and design patterns to pre
 
 ### Section Headers
 - **"Client Operations"** (not "Global Parameters" or "Operations Data")
-- **"Rates Comparison"** (not "Per-Unit Costs" or "Pricing") — rate table only
+- **"Service Channels"** — channel definitions (voice, chat, SMS, IVR)
+- **"Rate Card"** (not "Rates Comparison" or "Per-Unit Costs") — rate table only
 - **"Additional Costs"** (not "Dynamic Ledger" or "Cost Items")
-- **"AI Rudder Configuration"** — deflection rate + AI handle times (voice/chat)
+- **"AI Rudder Operation"** — per-channel deflection rates + AI handle times (voice/chat)
 - **"Efficiency Offset"** — admin hours saved only
 - **"Client Current State"** (not "Legacy" or "Status Quo")
 - **"AI Rudder Solution"** (not "Your Solution" or "New System")
@@ -22,21 +23,23 @@ This document locks down terminology, code standards, and design patterns to pre
 - **"Avg Monthly Salary per Agent"** — *Including benefits and overhead per agent*
 
 **Channel Fields:**
+- **"Service Channel Name"** — *e.g. Agent Calling*
 - **"Volume"** — *Monthly interaction count for this channel*
-- **"Avg Handle Time (Minutes)"** — *Average duration per human-handled interaction* (voice only)
+- **"Avg Handle Time (Minutes)"** — *Average duration per human-handled interaction* (voice/chat/IVR)
 
-**Rates Comparison:**
-- **"Client Rate"** / **"AI Rudder's Bot Call Rates (AICalling)"** / **"AI Rudder Call Rates (AICC)"** — column headers
+**Rate Card:**
+- Columns: **"Service Channel"** | **"Unit"** | **"Client's"** | **"AI Rudder (AICC)"** | **"AI Rudder Bot Usage (AICalling)"**
 
 **Additional Costs:**
 - **"Cost Name"** (not "Description" or "Item")
 - **"Amount"** (not "Cost" or "Value")
 - **"Frequency"** (not "Type" or "Period")
 
-**AI Rudder Configuration:**
-- **"AI Deflection Rate"** — *Percentage of interactions fully handled by AI without human intervention*
+**AI Rudder Operation:**
+- **Per-channel deflection sliders** — Each voice/chat channel gets its own deflection rate (0-80%)
 - **"Voice AI Handle Time (Min)"** — *Average duration when AI handles a voice call* (used in cost calculation)
 - **"Chat AI Handle Time (Min)"** — *Average duration when AI handles a chat session* (informational only; chat is per-session billing)
+- Section 4 card is hidden when no voice/chat channels exist
 
 **Efficiency Offset:**
 - **"Hours Saved by Automation"** — *Total hours/month freed by AI — e.g. autodialing, queue handling, admin tasks*
@@ -123,7 +126,7 @@ app.js ──→ state.js         (getState, setState, subscribe)
 ### Variable Naming
 - **camelCase** for all variables and functions
 - **Descriptive names** - no abbreviations unless universally known
-  - ✅ Good: `totalAgents`, `humanHandleTime`, `deflectionRate`, `channelCosts`
+  - ✅ Good: `totalAgents`, `humanHandleTime`, `channelDeflections`, `channelCosts`
   - ❌ Bad: `vol`, `aht`, `defRate`
 - **Exceptions allowed:** `html`, `id`, `ui`, `url`, `api`
 
@@ -208,11 +211,14 @@ export function formatCurrency(value) {
 // Per Agent → OpEx = amount × retainedAgents
 ```
 
-### Deflection Rate
-- **Range:** 0% to 80% (default: 20%)
-- **Applied to:** Per Agent costs only
-- **Formula:** `retainedAgents = totalAgents × (1 - deflectionRate)`
+### Per-Channel Deflection
+- **Range:** 0% to 80% per voice/chat channel (default: 20%)
+- **State shape:** `channelDeflections: { channelId: rate }` (e.g., `{ 1: 0.20, 3: 0.10 }`)
+- **Effective deflection:** Weighted average across voice/chat channels by workload (volume × handleTime)
+- **Formula:** `effectiveDeflection = Σ(workload × deflection) / Σ(workload)` for voice/chat channels
+- **Retained agents:** `retainedAgents = totalAgents × (1 - effectiveDeflection)`
 - **Rounding:** `Math.ceil()` (conservative)
+- SMS and IVR channels do not have deflection rates
 
 ### Admin Hours Saved (Efficiency Gains)
 - **Formula:** `adminValue = hoursPerMonth × (monthlySalary / 160)`
@@ -286,6 +292,7 @@ test: Add multi-channel integration test
 - **v1.0.1** - ES6 module fix
 - **v2.0.0** - Channel-based model, left/right layout, ES modules
 - **v2.2.0** - Dashboard restructure (3 sections), hard vs soft savings separation, chat handle time, ROI%, per-interaction cost
+- **v2.3.0** - Per-channel deflection, Rate Card UI restructure (unit column, column reorder), label streamlining
 
 ---
 
