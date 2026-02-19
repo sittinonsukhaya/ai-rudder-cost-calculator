@@ -861,22 +861,22 @@
             </thead>
             <tbody>
               <tr>
-                <td class="scenario-label">A: Cloud Contact Center</td>
-                <td>Client wants to switch their phone system to AI Rudder's cloud platform (no bot)</td>
+                <td class="scenario-label">A: AICC Only</td>
+                <td>Client wants to switch their phone system to AICC (no AICalling)</td>
                 <td>0%</td>
                 <td>Leave blank</td>
                 <td>Fill in</td>
               </tr>
               <tr>
-                <td class="scenario-label">B: AI Bot Only</td>
-                <td>Client wants to automate part of their calls with AI bot</td>
+                <td class="scenario-label">B: AICalling Only</td>
+                <td>Client wants to automate part of their calls with AICalling</td>
                 <td>10–80%</td>
                 <td>Fill in</td>
                 <td>Leave blank</td>
               </tr>
               <tr>
-                <td class="scenario-label">C: Hybrid (Bot + CC)</td>
-                <td>Client wants both bot automation AND cloud contact center</td>
+                <td class="scenario-label">C: AICC & AICalling Bundle</td>
+                <td>Client wants both AICC AND AICalling</td>
                 <td>10–80%</td>
                 <td>Fill in</td>
                 <td>Fill in</td>
@@ -900,22 +900,22 @@
             </thead>
             <tbody>
               <tr>
-                <td class="scenario-label">A: Cloud Contact Center</td>
-                <td>ลูกค้าต้องการย้ายระบบโทรศัพท์มาใช้ cloud platform ของ AI Rudder (ไม่มีบอท)</td>
+                <td class="scenario-label">A: AICC</td>
+                <td>ลูกค้าต้องการย้ายระบบโทรศัพท์มาใช้ AICC</td>
                 <td>0%</td>
                 <td>เว้นว่าง</td>
                 <td>กรอก</td>
               </tr>
               <tr>
-                <td class="scenario-label">B: AI Bot Only</td>
-                <td>ลูกค้าต้องการให้ AI bot รับสายบางส่วนแทนคน</td>
+                <td class="scenario-label">B: AICalling</td>
+                <td>ลูกค้าต้องการให้ AICalling รับสายบางส่วนแทนคน</td>
                 <td>10–80%</td>
                 <td>กรอก</td>
                 <td>เว้นว่าง</td>
               </tr>
               <tr>
-                <td class="scenario-label">C: Hybrid (Bot + CC)</td>
-                <td>ลูกค้าต้องการทั้งบอทอัตโนมัติและ cloud contact center</td>
+                <td class="scenario-label">C: AICC & AICalling</td>
+                <td>ลูกค้าต้องการทั้ง AICC และ AICalling</td>
                 <td>10–80%</td>
                 <td>กรอก</td>
                 <td>กรอก</td>
@@ -982,8 +982,6 @@
                 <td>Dialer eliminates wait time between calls</td>
               </tr>
             </table>
-            <p class="benchmark-source">Sources: LiveAgent 2025, Call Centre Helper, Sprinklr 2025</p>
-
             <p style="margin-top: 12px;"><strong>Quick tip:</strong> For most Thai contact centers doing outbound with manual dialing, <strong>50–80 calls/agent/day</strong> is a safe starting point. With a predictive dialer, double or triple that number.</p>
           </div>
 
@@ -1133,7 +1131,7 @@
 
           <div class="en-block">
             <p>These fields are in the <strong>AI Rudder Configuration</strong> section. There are two separate inputs:</p>
-
+            <br>
             <h4>Voice AI Handle Time</h4>
             <p>How long the AI bot takes per voice call. This is used directly in cost calculation (voice is billed per minute). Bots are faster than humans because there is no hold time and no after-call work.</p>
 
@@ -1150,7 +1148,7 @@
               <li>For scripted outbound campaigns, bots can be even faster (1–2 min)</li>
             </ul>
             <p style="margin-top: 8px;"><strong>Safe default:</strong> If unsure, set Voice AI Handle Time equal to the human AHT. This is the most conservative estimate — the real number will almost certainly be lower, making the actual savings even better.</p>
-
+            <br>
             <h4>Chat AI Handle Time</h4>
             <p>How long the AI bot takes per chat session. This is <strong>informational only</strong> — chat is billed per session, not per minute, so this value does not affect cost calculations. It's useful for setting expectations with the client about chat bot response times.</p>
             <p><strong>Typical value:</strong> 1–3 minutes per chat session.</p>
@@ -1158,7 +1156,7 @@
 
           <div class="thai-block">
             <p>ช่องเหล่านี้อยู่ในส่วน <strong>AI Rudder Configuration</strong> มี 2 ช่องแยกกัน:</p>
-
+            <br>
             <h4>Voice AI Handle Time (เวลาจัดการเสียงของ AI)</h4>
             <p>ระยะเวลาที่บอท AI ใช้ต่อสายเสียง ใช้ในการคำนวณต้นทุนโดยตรง (เสียงคิดค่าบริการต่อนาที) บอทเร็วกว่าคนเพราะไม่มีเวลา hold และไม่มีงานหลังสาย</p>
 
@@ -1175,7 +1173,7 @@
               <li>สำหรับแคมเปญโทรออกแบบ scripted บอทอาจเร็วกว่ามาก (1–2 นาที)</li>
             </ul>
             <p style="margin-top: 8px;"><strong>ค่าเริ่มต้นที่ปลอดภัย:</strong> ถ้าไม่แน่ใจ ตั้ง Voice AI Handle Time เท่ากับ AHT ของคน เป็นการประมาณแบบอนุรักษ์นิยมที่สุด — ตัวเลขจริงมักจะต่ำกว่า ทำให้ประหยัดได้มากกว่า</p>
-
+            <br>
             <h4>Chat AI Handle Time (เวลาจัดการแชทของ AI)</h4>
             <p>ระยะเวลาที่บอท AI ใช้ต่อ chat session <strong>เป็นข้อมูลอ้างอิงเท่านั้น</strong> — แชทคิดค่าบริการต่อ session ไม่ใช่ต่อนาที ค่านี้จึงไม่มีผลต่อการคำนวณต้นทุน แต่มีประโยชน์ในการตั้งความคาดหวังกับลูกค้าเกี่ยวกับความเร็วของแชทบอท</p>
             <p><strong>ค่าปกติ:</strong> 1–3 นาทีต่อ chat session</p>
@@ -1188,99 +1186,80 @@
           <h3 class="th-heading">3d. อัตรา AI Deflection</h3>
 
           <div class="en-block">
-            <p>This is the percentage of calls the bot handles completely without a human. It depends on how mature the bot deployment is and how complex the calls are.</p>
+            <p>This is the percentage of calls the bot handles completely without a human. It depends on how complex the interaction with the customers are and how much workload the bot will handle comparing to clients entire contact center operation.</p>
 
             <table class="benchmark-table">
               <tr>
-                <th>Deployment Stage</th>
                 <th>Typical Deflection</th>
-                <th>Timeline</th>
-              </tr>
-              <tr>
-                <td>New bot (basic FAQ, rule-based)</td>
-                <td>10–20%</td>
-                <td>Month 1–3</td>
-              </tr>
-              <tr>
-                <td>Early AI (learning, some integrations)</td>
-                <td>20–35%</td>
-                <td>Month 3–6</td>
-              </tr>
-              <tr>
-                <td>Mature AI (trained, CRM integrated)</td>
-                <td>35–50%</td>
-                <td>Month 6–12</td>
-              </tr>
+                <th>Bot Complexity</th>
+                <th>Sample Client</th>
+                
+                </tr>
               <tr class="highlight-row">
-                <td>Advanced (full knowledge base, smart fallbacks)</td>
-                <td>50–70%</td>
-                <td>Year 2+</td>
+                <td>20–30%</td>
+                <td>Mostly Low Complexity with Some Medium Complexity (Mostly Routine-only queries like Collection Reminder Call, KYC, Order status, FAQ)</td>
+                <td>Typical Contact Center & BPO for Collection</td>
+                </tr>
+              <tr>
+                <td>30–50%</td>
+                <td>Combination of Medium and Low Complexity (Handling some escation cases, obtaining input and transfer to human agent, rescheduling payments, etc)</td>
+                <td>Some Business units in Enterprise (eg. Customer Support) or Contact Center with larger scale and modern approaches</td>
               </tr>
               <tr>
-                <td>Routine-only queries (password reset, order status)</td>
-                <td>Up to 80%</td>
-                <td>When scope is narrow and simple</td>
-              </tr>
+                <td>50–80%</td>
+                <td>Combination of Low, Medium, and High Complextity (Multitple different bots handling different use cases from simple task like balance checking to handling complex task like disputing escalation or ordering customized product) </td>
+                <td>Some Business Unit in Series B and above startups or Tech-Driven Enterprise</td>
+                </tr>
             </table>
-            <p class="benchmark-source">Gartner predicts 80% automated resolution by 2029. Sources: Gartner, Freshworks 2024, Calabrio</p>
-
             <p style="margin-top: 10px;"><strong>Recommendation for client presentations:</strong></p>
             <ul>
               <li><strong>Conservative pitch (first meeting):</strong> Use 15–20%. Easy to justify, hard to argue against.</li>
               <li><strong>Realistic pitch (proposal stage):</strong> Use 30–40%. Supported by industry data.</li>
-              <li><strong>Optimistic pitch (mature deployment):</strong> Use 50–60%. Show as "Phase 2" target with the slider.</li>
-            </ul>
+              </ul>
           </div>
 
           <div class="thai-block">
             <p>คือเปอร์เซ็นต์ของสายที่บอทจัดการได้ครบถ้วนโดยไม่ต้องมีคน ขึ้นกับความเจริญเติบโตของการ deploy บอทและความซับซ้อนของสาย</p>
 
             <table class="benchmark-table">
-              <tr>
+              <tr class="highlight-row">
                 <th>ระยะ Deploy</th>
                 <th>Deflection ทั่วไป</th>
-                <th>ระยะเวลา</th>
-              </tr>
+                </tr>
               <tr>
                 <td>บอทใหม่ (FAQ พื้นฐาน, rule-based)</td>
                 <td>10–20%</td>
-                <td>เดือน 1–3</td>
-              </tr>
+                </tr>
               <tr>
                 <td>AI ช่วงต้น (เรียนรู้, เชื่อมบางระบบ)</td>
                 <td>20–35%</td>
-                <td>เดือน 3–6</td>
-              </tr>
+                </tr>
               <tr>
                 <td>AI เต็มที่ (เทรนแล้ว, เชื่อม CRM)</td>
                 <td>35–50%</td>
-                <td>เดือน 6–12</td>
-              </tr>
-              <tr class="highlight-row">
+                </tr>
+              <tr>
                 <td>ขั้นสูง (knowledge base เต็ม, smart fallbacks)</td>
                 <td>50–70%</td>
-                <td>ปีที่ 2+</td>
-              </tr>
+                </tr>
               <tr>
                 <td>เฉพาะงาน routine (reset password, เช็คสถานะ)</td>
                 <td>สูงถึง 80%</td>
-                <td>เมื่อขอบเขตงานแคบและง่าย</td>
-              </tr>
+                </tr>
             </table>
 
             <p style="margin-top: 10px;"><strong>แนะนำสำหรับการนำเสนอ:</strong></p>
             <ul>
               <li><strong>แบบอนุรักษ์นิยม (ประชุมครั้งแรก):</strong> ใช้ 15–20% อธิบายง่าย โต้แย้งยาก</li>
               <li><strong>แบบสมจริง (ขั้น proposal):</strong> ใช้ 30–40% มีข้อมูลอุตสาหกรรมรองรับ</li>
-              <li><strong>แบบมองไกล (ระยะยาว):</strong> ใช้ 50–60% โชว์เป็นเป้า "Phase 2" โดยเลื่อน slider</li>
-            </ul>
+              </ul>
           </div>
         </div>
 
         <!-- 3E: Admin Hours Saved -->
         <div class="estimation-subsection" id="est-admin">
-          <h3 class="en-heading">3e. Admin Hours Saved/Month — The Hidden Gold Mine</h3>
-          <h3 class="th-heading">3e. ชั่วโมง Admin ที่ประหยัด/เดือน — ขุมทองที่ซ่อนอยู่</h3>
+          <h3 class="en-heading">3e. Admin Hours Saved/Month</h3>
+          <h3 class="th-heading">3e. ชั่วโมง Admin ที่ประหยัด/เดือน</h3>
 
           <div class="en-block">
             <p>This field captures the value of supervisory and administrative time that AI automation eliminates. Most clients underestimate this. Break it down into categories and add them up:</p>
