@@ -55,15 +55,22 @@ export function calculateChannelCosts(channels, rates, aiHandleTime, deflectionR
     const agentVolume = volume * (1 - dr);
 
     if (channel.type === 'voice') {
+      // Voice: per minute, deflection applies
       clientTotal += rate.client * volume * (channel.humanHandleTime || 0);
-      // Bot calls: shorter AI handle time
       aiTotal += rate.aiBot * botVolume * (aiHandleTime || 0);
-      // Agent calls: original human handle time
       aiTotal += rate.aiAgent * agentVolume * (channel.humanHandleTime || 0);
-    } else {
-      // SMS (per message) and Chat (per session)
+    } else if (channel.type === 'chat') {
+      // Chat: per session, deflection applies
       clientTotal += rate.client * volume;
       aiTotal += rate.aiBot * botVolume + rate.aiAgent * agentVolume;
+    } else if (channel.type === 'sms') {
+      // SMS: per message, no deflection (bulk broadcast)
+      clientTotal += rate.client * volume;
+      aiTotal += (rate.aiBot + rate.aiAgent) * volume;
+    } else if (channel.type === 'ivr') {
+      // IVR: per minute, no deflection (already automated, platform swap)
+      clientTotal += rate.client * volume * (channel.humanHandleTime || 0);
+      aiTotal += rate.aiAgent * volume * (channel.humanHandleTime || 0);
     }
   });
 

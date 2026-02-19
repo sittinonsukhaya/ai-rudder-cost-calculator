@@ -93,18 +93,58 @@ describe('calculateChannelCosts', () => {
     expect(result.aiTotal).toBe(6000);
   });
 
-  test('SMS splits by deflection without handle time', () => {
+  test('SMS uses full volume without deflection (bulk broadcast)', () => {
     const channels = [
       { id: 1, type: 'sms', volume: 50000 }
     ];
-    const rates = { 1: { client: 0.5, aiBot: 0.2, aiAgent: 0.4 } };
+    const rates = { 1: { client: 0.5, aiBot: 0, aiAgent: 0.4 } };
     const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
 
     // Client: 0.5 * 50000 = 25,000
     expect(result.clientTotal).toBe(25000);
-    // AI bot: 0.2 * 10000 = 2,000
-    // AI agent: 0.4 * 40000 = 16,000
-    expect(result.aiTotal).toBe(18000);
+    // AI: (0 + 0.4) * 50000 = 20,000 (full volume, no deflection split)
+    expect(result.aiTotal).toBe(20000);
+  });
+
+  test('SMS with both bot and agent rates sums them over full volume', () => {
+    const channels = [
+      { id: 1, type: 'sms', volume: 10000 }
+    ];
+    const rates = { 1: { client: 0.5, aiBot: 0.2, aiAgent: 0.3 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.5);
+
+    // Client: 0.5 * 10000 = 5,000
+    expect(result.clientTotal).toBe(5000);
+    // AI: (0.2 + 0.3) * 10000 = 5,000 (deflection ignored for SMS)
+    expect(result.aiTotal).toBe(5000);
+  });
+
+  test('IVR uses full volume with handle time, no deflection, agent rate only', () => {
+    const channels = [
+      { id: 1, type: 'ivr', volume: 20000, humanHandleTime: 2 }
+    ];
+    const rates = { 1: { client: 1.5, aiBot: 0, aiAgent: 1.0 } };
+    const result = calculateChannelCosts(channels, rates, 3.5, 0.2);
+
+    // Client: 1.5 * 20000 * 2 = 60,000
+    expect(result.clientTotal).toBe(60000);
+    // AI: agentRate * fullVolume * handleTime = 1.0 * 20000 * 2 = 40,000
+    // (no deflection split, bot rate ignored for IVR)
+    expect(result.aiTotal).toBe(40000);
+  });
+
+  test('IVR ignores deflection rate completely', () => {
+    const channels = [
+      { id: 1, type: 'ivr', volume: 10000, humanHandleTime: 3 }
+    ];
+    const rates = { 1: { client: 2, aiBot: 0, aiAgent: 1 } };
+
+    const resultLow = calculateChannelCosts(channels, rates, 3.5, 0.1);
+    const resultHigh = calculateChannelCosts(channels, rates, 3.5, 0.8);
+
+    // Both should produce the same AI total since deflection doesn't apply
+    expect(resultLow.aiTotal).toBe(resultHigh.aiTotal);
+    expect(resultLow.aiTotal).toBe(30000); // 1 * 10000 * 3
   });
 
   test('chat splits by deflection without handle time', () => {
@@ -121,7 +161,7 @@ describe('calculateChannelCosts', () => {
     expect(result.aiTotal).toBe(51000);
   });
 
-  test('handles multiple channels with deflection', () => {
+  test('handles multiple channels: voice+chat use deflection, SMS does not', () => {
     const channels = [
       { id: 1, type: 'voice', volume: 5000, humanHandleTime: 6 },
       { id: 2, type: 'sms', volume: 20000 },
@@ -140,9 +180,9 @@ describe('calculateChannelCosts', () => {
     expect(result.clientTotal).toBe(220000);
 
     // Voice AI: bot(1*1000*3.5=3500) + agent(5*4000*6=120000) = 123,500
-    // SMS AI: bot(0.2*4000=800) + agent(0.4*16000=6400) = 7,200
+    // SMS AI: (0.2+0.4)*20000 = 12,000 (no deflection, full volume)
     // Chat AI: bot(15*600=9000) + agent(30*2400=72000) = 81,000
-    expect(result.aiTotal).toBe(211700);
+    expect(result.aiTotal).toBe(216500);
   });
 
   test('handles missing rates for a channel', () => {

@@ -43,11 +43,12 @@ This document locks down terminology, code standards, and design patterns to pre
 - Hourly rate is derived internally from `monthlySalary / 160` (not a user input)
 
 ### Channel Types and Billing Units
-| Type | Billing Unit | Has Handle Time? |
-|------|-------------|-----------------|
-| Voice | per minute | Yes |
-| SMS | per message | No |
-| Chat | per session | Yes |
+| Type | Billing Unit | Has Handle Time? | Deflection Applies? |
+|------|-------------|-----------------|-------------------|
+| Voice | per minute | Yes | Yes — splits volume between bot and agent |
+| Chat | per session | Yes | Yes — splits volume between bot and agent |
+| SMS | per message | No | No — bulk broadcast, full volume on both sides |
+| IVR | per minute | Yes | No — already automated, agent rate × full volume |
 
 ### Frequency Options (Additional Costs)
 - **"One-time"** — CapEx (Month 0 only)
@@ -185,10 +186,18 @@ export function formatCurrency(value) {
 
 ### Channel Cost Calculation
 ```javascript
-// Voice: clientRate × volume × humanHandleTime (client)
-//        aiRate × volume × aiHandleTime (AI)
-// SMS:   clientRate × volume (both sides)
-// Chat:  clientRate × volume (both sides)
+// Voice (deflection applies):
+//   Client: clientRate × volume × humanHandleTime
+//   AI:     botRate × botVolume × aiHandleTime + agentRate × agentVolume × humanHandleTime
+// Chat (deflection applies):
+//   Client: clientRate × volume
+//   AI:     botRate × botVolume + agentRate × agentVolume
+// SMS (no deflection — bulk broadcast):
+//   Client: clientRate × volume
+//   AI:     (botRate + agentRate) × volume
+// IVR (no deflection — already automated, platform swap):
+//   Client: clientRate × volume × handleTime
+//   AI:     agentRate × volume × handleTime
 ```
 
 ### Ledger Frequency Mapping

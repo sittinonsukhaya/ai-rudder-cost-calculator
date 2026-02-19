@@ -38,7 +38,8 @@ function getChannelTypes() {
   return {
     voice: { label: t('channel.voice'), unit: t('channel.perMinute'), hasHandleTime: true },
     sms: { label: t('channel.sms'), unit: t('channel.perMessage'), hasHandleTime: false },
-    chat: { label: t('channel.chat'), unit: t('channel.perSession'), hasHandleTime: true }
+    chat: { label: t('channel.chat'), unit: t('channel.perSession'), hasHandleTime: true },
+    ivr: { label: t('channel.ivr'), unit: t('channel.perMinute'), hasHandleTime: true }
   };
 }
 

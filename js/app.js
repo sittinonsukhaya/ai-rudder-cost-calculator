@@ -201,6 +201,8 @@ channelsContainer.addEventListener('change', (e) => {
       if (!updated.humanHandleTime) updated.humanHandleTime = 6;
     } else if (el.value === 'chat') {
       if (!updated.humanHandleTime) updated.humanHandleTime = 5;
+    } else if (el.value === 'ivr') {
+      if (!updated.humanHandleTime) updated.humanHandleTime = 3;
     } else {
       delete updated.humanHandleTime;
     }
