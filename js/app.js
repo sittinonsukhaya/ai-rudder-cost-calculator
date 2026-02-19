@@ -125,13 +125,22 @@ function renderChannelsAndRates() {
 }
 
 /**
- * Show/hide Section 4 card based on voice/chat channel presence
+ * Show/hide Section 4 card and individual AI handle time inputs
+ * based on which channel types exist
  */
 function updateAiConfigVisibility(channels) {
-  const hasVoiceChat = (channels || []).some(ch => ch.type === 'voice' || ch.type === 'chat');
+  const hasVoice = (channels || []).some(ch => ch.type === 'voice');
+  const hasChat = (channels || []).some(ch => ch.type === 'chat');
+  const hasVoiceChat = hasVoice || hasChat;
+
   if (aiConfigCard) {
     aiConfigCard.style.display = hasVoiceChat ? '' : 'none';
   }
+
+  const voiceGroup = document.getElementById('voiceAiHandleTimeGroup');
+  const chatGroup = document.getElementById('chatAiHandleTimeGroup');
+  if (voiceGroup) voiceGroup.style.display = hasVoice ? '' : 'none';
+  if (chatGroup) chatGroup.style.display = hasChat ? '' : 'none';
 }
 
 // ===== Language Switch =====
